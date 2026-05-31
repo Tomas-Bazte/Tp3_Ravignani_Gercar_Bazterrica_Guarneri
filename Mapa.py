@@ -32,7 +32,7 @@ import sys
 
 pg.init()
 
-TILE = 20
+TILE = 24
 
 mapa = Cargar_Mapa("Mapa.txt")
 
