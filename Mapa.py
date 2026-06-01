@@ -1,4 +1,5 @@
 import pygame as pg
+import sys
 def Cargar_Mapa(Ruta: str) -> list:
     """Parametros:
                    Ruta -> es donde se encuntra el archivo de texto
@@ -7,28 +8,47 @@ def Cargar_Mapa(Ruta: str) -> list:
     with open (Ruta, "r") as Archivo:
        Mapa = Archivo.read().splitlines()
        return Mapa
-    
-def Dibujar_Pared(pantalla, x, y, tamaño_casillero ): 
-    pg.draw.rect(pantalla, (0, 0, 0), (x, y, tamaño_casillero, tamaño_casillero))
-    pg.draw.rect(pantalla, (0, 0, 255), (x, y, tamaño_casillero, tamaño_casillero), 2)
+
+class pared (pg.sprite.Sprite):
+    def __init__(self,x,y,tamaño):
+        super().__init__()
+        self.image = pg.surface((tamaño,tamaño))
+        self.image.fill((0,0,0))
+        pg.draw.rect(self.image,(0,0,255),(0,0,tamaño,tamaño),2)
+        self.hitbox = self.image.get_rect()
+
+
+class puntitos (pg.sprite.Sprite):
+    def __init__ (self,x,y,Super=False):
+        super().__init__()
+        radio = (7 if Super else 3)
+        tamaño = radio*2
+        self.image = pg.surface((tamaño,tamaño),pg.SRCALPHA)
+        pg.draw.circle(self.image(222,161,133),(radio,radio),radio)
+        self.hitbox = self.image.get_rect()
+        self.rect.center = (x+12,y+12)
+
 
 def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
+    grupo_Paredes = pg.sprite.Group()
+    grupo_puntos = pg.sprite.Group()
     for fila in range(len(mapa)):
         for columna in range(len(mapa[fila])):
-            Carater = mapa[fila][columna]
+            Caracter = mapa[fila][columna]
             x = columna * tamaño_casillero
             y = fila * tamaño_casillero
-            if Carater == "X":
-               Dibujar_Pared(pantalla, x, y, tamaño_casillero )
-            elif Carater == ".":
-                pg.draw.circle(pantalla, (222, 161, 133) ,(x + tamaño_casillero // 2, y + tamaño_casillero // 2), 3)
-            elif Carater == "o":
-                pg.draw.circle(pantalla, (222, 161, 133) ,(x + tamaño_casillero // 2, y + tamaño_casillero // 2), 7)
-            elif Carater == "G":
-                pg.draw.rect(pantalla, (0, 0, 0), (x, y, tamaño_casillero, tamaño_casillero))
-            elif Carater == "-":
-                 pg.draw.line(pantalla,(255, 150, 255), (x, y + TILE // 2), (x + TILE, y + TILE // 2), 4 )
-import sys
+            if Caracter == "X":
+               Nueva_pared= pared(x, y, tamaño_casillero )
+               grupo_Paredes.add(Nueva_pared)
+            elif Caracter == ".":
+                Nuevo_punto = puntitos(x,y,False)
+                grupo_puntos.add(Nuevo_punto)
+            elif Caracter == "o":
+                Nuevo_punto = puntitos(x,y,True)
+                grupo_puntos.add(Nuevo_punto)
+
+                
+    return grupo_Paredes
 
 pg.init()
 
