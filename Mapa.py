@@ -16,7 +16,7 @@ class pared (pg.sprite.Sprite):
         super().__init__()
         self.image = pg.Surface((tamaño,tamaño))
         self.image.fill((0,0,0))
-        pg.draw.rect(self.image,(0,0,255),(0,0,tamaño,tamaño),2)
+        pg.draw.rect(self.image,(0,0,255),(0,0,tamaño,tamaño),1)
         self.rect = self.image.get_rect()
         self.rect.topleft = (x,y)
 
@@ -67,7 +67,7 @@ ANCHO = len(mapa[0]) * TILE
 ALTO = len(mapa) * TILE
 
 pantalla = pg.display.set_mode((ANCHO, ALTO))
-grupo_Paredes, grupo_puntos = Dibujar_Mapa(pantalla, mapa, TILE)
+grupo_Paredes, grupo_puntos, Pos_Pm = Dibujar_Mapa(pantalla, mapa, TILE)
 
 while True:
 
