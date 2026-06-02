@@ -15,7 +15,8 @@ class pared (pg.sprite.Sprite):
         self.image = pg.Surface((tamaño,tamaño))
         self.image.fill((0,0,0))
         pg.draw.rect(self.image,(0,0,255),(0,0,tamaño,tamaño),2)
-        self.hitbox = self.image.get_rect()
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x,y)
 
 
 class puntitos (pg.sprite.Sprite):
@@ -25,7 +26,7 @@ class puntitos (pg.sprite.Sprite):
         tamaño = radio*2
         self.image = pg.Surface((tamaño,tamaño),pg.SRCALPHA)
         pg.draw.circle(self.image(222,161,133),(radio,radio),radio)
-        self.hitbox = self.image.get_rect()
+        self.rect = self.image.get_rect()
         self.rect.center = (x+12,y+12)
 
 
