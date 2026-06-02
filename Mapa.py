@@ -1,5 +1,7 @@
 import pygame as pg
 import sys
+
+pg.init()
 def Cargar_Mapa(Ruta: str) -> list:
     """Parametros:
                    Ruta -> es donde se encuntra el archivo de texto
@@ -25,9 +27,13 @@ class puntitos (pg.sprite.Sprite):
         radio = (7 if Super else 3)
         tamaño = radio*2
         self.image = pg.Surface((tamaño,tamaño),pg.SRCALPHA)
-        pg.draw.circle(self.image,(222,161,133),(radio,radio),radio)
+        pg.draw.circle(self.image,(255,255,255),(radio,radio),radio)
         self.rect = self.image.get_rect()
         self.rect.center = (x+12,y+12)
+
+class tuneles (pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
 
 
 def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
@@ -47,11 +53,11 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
             elif Caracter == "o":
                 Nuevo_punto = puntitos(x,y,True)
                 grupo_puntos.add(Nuevo_punto)
+            elif Caracter == "P":
+                Pos_Pm = (x,y)
 
                 
-    return grupo_Paredes, grupo_puntos
-
-pg.init()
+    return grupo_Paredes, grupo_puntos, Pos_Pm
 
 TILE = 24
 
@@ -61,6 +67,7 @@ ANCHO = len(mapa[0]) * TILE
 ALTO = len(mapa) * TILE
 
 pantalla = pg.display.set_mode((ANCHO, ALTO))
+grupo_Paredes, grupo_puntos = Dibujar_Mapa(pantalla, mapa, TILE)
 
 while True:
 
@@ -70,7 +77,6 @@ while True:
             sys.exit()
 
     pantalla.fill((0, 0, 0))
-
-    Dibujar_Mapa(pantalla, mapa, TILE)
-
+    grupo_puntos.draw(pantalla)
+    grupo_Paredes.draw(pantalla)
     pg.display.flip()
