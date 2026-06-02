@@ -31,6 +31,7 @@ class PacMan (Criatura):
         self.puntaje = 0
         self.frame_animacion = 0 # frame_animacion = 0 - boca casi cerrada, frame_animacion = 5  - boca media abierta, frame_animacion = 10 - boca muy abierta
         self.boca_abriendo = True # True: boca se esta abriendo, False: boca se esta cerrando
+        self.vida_extra_dada = False # A los 10k puntos se devuelve una vida, pasa solamente una vez.
         
     def cambiar_direccion(self, tecla):
         if tecla == pg.K_RIGHT:
@@ -70,9 +71,13 @@ class PacMan (Criatura):
     
     def sumar_puntos(self,puntos):
         self.puntaje += puntos
+        if self.puntaje >= 10000 and not self.vida_extra_dada:
+            self.vidas += 1
+            self.vida_extra_dada = True
     
     def perder_vida(self):
-        self.vidas -= 1
+        if self.vidas > 0:
+            self.vidas -= 1
         self.direccion = "quieto"
 
     def esta_vivo(self): # Para saber si murió PacMan
@@ -93,6 +98,13 @@ class PacMan (Criatura):
     
     def choca_con(self, otra_criatura): # Para Pacman vs Fantasmas
         return self.obtener_hitbox().colliderect(otra_criatura.obtener_hitbox()) # True o False
+    
+    def comer_punto(self):
+        self.sumar_puntos(10)
+    
+    def comer_power_pellet(self):
+        self.sumar_puntos(50)
+        self.activar_super()
     
 
 class Fantasma(Criatura):
