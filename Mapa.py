@@ -12,7 +12,7 @@ def Cargar_Mapa(Ruta: str) -> list:
 class pared (pg.sprite.Sprite):
     def __init__(self,x,y,tamaño):
         super().__init__()
-        self.image = pg.surface((tamaño,tamaño))
+        self.image = pg.Surface((tamaño,tamaño))
         self.image.fill((0,0,0))
         pg.draw.rect(self.image,(0,0,255),(0,0,tamaño,tamaño),2)
         self.hitbox = self.image.get_rect()
@@ -23,7 +23,7 @@ class puntitos (pg.sprite.Sprite):
         super().__init__()
         radio = (7 if Super else 3)
         tamaño = radio*2
-        self.image = pg.surface((tamaño,tamaño),pg.SRCALPHA)
+        self.image = pg.Surface((tamaño,tamaño),pg.SRCALPHA)
         pg.draw.circle(self.image(222,161,133),(radio,radio),radio)
         self.hitbox = self.image.get_rect()
         self.rect.center = (x+12,y+12)
@@ -38,7 +38,7 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
             x = columna * tamaño_casillero
             y = fila * tamaño_casillero
             if Caracter == "X":
-               Nueva_pared= pared(x, y, tamaño_casillero )
+               Nueva_pared= pared(x, y, tamaño_casillero)
                grupo_Paredes.add(Nueva_pared)
             elif Caracter == ".":
                 Nuevo_punto = puntitos(x,y,False)
@@ -48,7 +48,7 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
                 grupo_puntos.add(Nuevo_punto)
 
                 
-    return grupo_Paredes
+    return grupo_Paredes, grupo_puntos
 
 pg.init()
 
