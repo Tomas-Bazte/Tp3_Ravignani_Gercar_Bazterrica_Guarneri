@@ -7,6 +7,7 @@ class Criatura:
         self.y = y
         self.velocidad = velocidad
         self.direccion = "quieto"
+        self.radio = 18 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
     
     def mover(self):
         if self.direccion == "derecha":
@@ -17,7 +18,10 @@ class Criatura:
             self.y -= self.velocidad
         elif self.direccion == "abajo":
             self.y += self.velocidad
-            
+    
+    def obtener_hitbox(self):
+        return pg.Rect(self.x - self.radio, self.y - self.radio, self.radio * 2, self.radio * 2)
+         
 class PacMan (Criatura):
     velocidad_normal = 0.80
     velocidad_super = 0.90
@@ -25,7 +29,6 @@ class PacMan (Criatura):
         super().__init__(x, y, PacMan.velocidad_normal)
         self.vidas = 3
         self.puntaje = 0
-        self.radio = 18 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
         self.frame_animacion = 0 # frame_animacion = 0 - boca casi cerrada, frame_animacion = 5  - boca media abierta, frame_animacion = 10 - boca muy abierta
         self.boca_abriendo = True # True: boca se esta abriendo, False: boca se esta cerrando
         
@@ -64,6 +67,33 @@ class PacMan (Criatura):
             self.frame_animacion -= 1
             if self.frame_animacion <= 0:
                 self.boca_abriendo = True
+    
+    def sumar_puntos(self,puntos):
+        self.puntaje += puntos
+    
+    def perder_vida(self):
+        self.vidas -= 1
+        self.direccion = "quieto"
+
+    def esta_vivo(self): # Para saber si murió PacMan
+        return self.vidas > 0
+
+    def activar_super(self):
+        self.velocidad = PacMan.velocidad_super
+    
+    def desactivar_super(self):
+        self.velocidad = PacMan.velocidad_normal
+    
+    def reiniciar_posicion(self, x, y): # Volver a posición inicial
+        self.x = x
+        self.y = y
+        self.direccion = "quieto"
+        self.frame_animacion = 0
+        self.boca_abriendo = True
+    
+    def choca_con(self, otra_criatura): # Para Pacman vs Fantasmas
+        return self.obtener_hitbox().colliderect(otra_criatura.obtener_hitbox()) # True o False
+    
 
 class Fantasma(Criatura):
     velocidad_normal = 0.75
@@ -77,7 +107,6 @@ class Fantasma(Criatura):
         self.pos_Pc = pos_Pc
         self.estado = "scatter"  
         self.direccion = "en_casa"
-        self.radio = 18
         self.norma = x**2 + y**2
 
     def calcular_Dist(self,tile=24):
@@ -86,15 +115,13 @@ class Fantasma(Criatura):
         diff = origen - destino
         Dist = math.sqrt((diff.magnitude_squared()))
         return Dist
+    
  
-        
-
-
 class Clyde (Fantasma):
     def __init__(self, x, y, nombre, color, esquina_scatter):
-        super().__init__(x, y, nombre, color, esquina_scatter)
+        super().__init__(x, y, "Clyde", (255,165,0), esquina_scatter, self.pos_Pc)
         self.nombre = "Clyde"
         self.color = "Naranja"
         self.esquina_scatter = esquina_scatter
         self.Dist = self.calcular_Dist(self)
-    
+        
