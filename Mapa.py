@@ -25,7 +25,7 @@ class puntitos (pg.sprite.Sprite):
         radio = (7 if Super else 3)
         tamaño = radio*2
         self.image = pg.Surface((tamaño,tamaño),pg.SRCALPHA)
-        pg.draw.circle(self.image(222,161,133),(radio,radio),radio)
+        pg.draw.circle(self.image,(222,161,133),(radio,radio),radio)
         self.rect = self.image.get_rect()
         self.rect.center = (x+12,y+12)
 
