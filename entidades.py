@@ -9,7 +9,7 @@ class Criatura(pg.sprite.Sprite):
         self.y = y
         self.velocidad = velocidad # tiles/segundo
         self.direccion = "quieto"
-        self.radio = 9.5 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
+        self.radio = 10 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
 
     
     def mover(self, dt, tile_size=24):  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
@@ -131,6 +131,7 @@ class PacMan (Criatura):
         self.modo_super = True
         self.tiempo_super_inicio = pg.time.get_ticks()
         self.velocidad = PacMan.velocidad_super
+        self.sonido_fright.stop()
         self.sonido_fright.play(loops=-1)
     
     def desactivar_super(self):
