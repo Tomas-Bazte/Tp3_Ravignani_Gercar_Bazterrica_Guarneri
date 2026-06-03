@@ -112,7 +112,7 @@ while jugando:
                 Pos_Pm[1] + TILE_SIZE // 2
             )
     else:
-        pacman.mover(dt, TILE_SIZE)
+        pacman.Choque(dt,TILE_SIZE,grupo_paredes)
         pacman.actualizar_animacion()
         pacman.actualizar_super()
 
