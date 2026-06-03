@@ -9,6 +9,7 @@ class Criatura(pg.sprite.Sprite):
         self.y = y
         self.velocidad = velocidad # tiles/segundo
         self.direccion = "quieto"
+        self.prox = "quieto"
         self.radio = 10 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
 
     
@@ -24,13 +25,29 @@ class Criatura(pg.sprite.Sprite):
             self.y += desplazamiento
     
     def Choque (self,dt,tile_size=24,paredes=None):
-        xor , yor = self.x, self.y
-        self.mover(dt,tile_size)
-        self.rect.center = (int(self.x),int(self.y))
-        if pg.sprite.spritecollide(self,paredes,False):
-            self.x, self.y = xor , yor
-            self.rect.center = (int(self.x),int(self.y))
-            self.direccion = "quieto"
+        if self.prox != self.direccion and self.prox != "quieto":
+            direccion_ant = self.direccion
+            self.direccion = self.prox
+            xor , yor = self.x , self.y
+            self.mover(dt , tile_size)
+            self.rect.center = (int(self.x), int(self.y))
+
+            if pg.sprite.spritecollide (self,paredes,False):
+                self.x , self.y = xor , yor
+                self.direccion = direccion_ant
+                self.rect.center = (int(self.x), int(self.y))
+            else:
+                return
+        
+        if self.direccion != "quieto":
+            xor , yor = self.x , self.y
+            self.mover (dt , tile_size)
+            self.rect.center = (int(self.x), int(self.y))
+
+            if pg.sprite.spritecollide (self, paredes,False):
+                self.x, self.y = xor, yor
+                self.rect.center = (int(self.x), int(self.y))
+
 
 
     def obtener_hitbox(self):
@@ -69,13 +86,13 @@ class PacMan (Criatura):
         
     def cambiar_direccion(self, tecla):
         if tecla == pg.K_RIGHT or tecla == pg.K_d:
-            self.direccion = "derecha"
+            self.prox = "derecha"
         elif tecla == pg.K_LEFT or tecla == pg.K_a:
-            self.direccion = "izquierda"
+            self.prox = "izquierda"
         elif tecla == pg.K_UP or tecla == pg.K_w:
-            self.direccion = "arriba"
+            self.prox = "arriba"
         elif tecla == pg.K_DOWN or tecla == pg.K_s:
-            self.direccion = "abajo"
+            self.prox = "abajo"
             
     def dibujar(self,pantalla):
         centro = (int(self.x), int(self.y))
