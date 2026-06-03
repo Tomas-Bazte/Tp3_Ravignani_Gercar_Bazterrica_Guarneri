@@ -1,6 +1,7 @@
 import pygame as pg
 import sys
 from entidades import PacMan
+import HUD
 
 pg.init()
 def Cargar_Mapa(Ruta: str) -> list:
@@ -69,30 +70,48 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
                 
     return grupo_Paredes, grupo_puntos, Pos_Pm
 
-
 pg.init()
 pg.mixer.init()
+pg.font.init()
 
 TILE_SIZE = 24
-ANCHO = 28 * TILE_SIZE
-ALTO = 31 * TILE_SIZE
+
+MAPA_ANCHO = 28 * TILE_SIZE
+MAPA_ALTO = 31 * TILE_SIZE
+
+HUD_ARRIBA = 75
+HUD_ABAJO = 45
+
+ANCHO = MAPA_ANCHO
+ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
 
 pantalla = pg.display.set_mode((ANCHO, ALTO))
-pg.display.set_caption("Test PacMan con mapa")
+pg.display.set_caption("Test PacMan + Mapa + HUD")
+
+mapa_surface = pg.Surface((MAPA_ANCHO, MAPA_ALTO))
 
 reloj = pg.time.Clock()
+fuente = pg.font.SysFont("Courier", 30, bold=True)
 
 mapa = Cargar_Mapa("mapa.txt")
-grupo_paredes, grupo_puntos, Pos_Pm = Dibujar_Mapa(pantalla, mapa, TILE_SIZE)
+grupo_paredes, grupo_puntos, Pos_Pm = Dibujar_Mapa(
+    mapa_surface,
+    mapa,
+    TILE_SIZE
+)
 
-pacman = PacMan(Pos_Pm[0] + TILE_SIZE // 2, Pos_Pm[1] + TILE_SIZE // 2)
+pacman = PacMan(
+    Pos_Pm[0] + TILE_SIZE // 2,
+    Pos_Pm[1] + TILE_SIZE // 2
+)
+
 pacman.cargar_frames_muerte()
+
+high_score = HUD.cargar_high_score()
 
 jugando = True
 
 while jugando:
-    # dt = segundos desde el último frame.
-    # Se usa para que PacMan se mueva en tiles/segundo.
     dt = reloj.tick(60) / 1000
 
     for evento in pg.event.get():
@@ -111,9 +130,10 @@ while jugando:
                 Pos_Pm[0] + TILE_SIZE // 2,
                 Pos_Pm[1] + TILE_SIZE // 2
             )
+
     else:
-        pacman.Choque(dt,TILE_SIZE,grupo_paredes)
-        pacman.manejar_tunel(ANCHO)
+        pacman.Choque(dt, TILE_SIZE, grupo_paredes)
+        pacman.manejar_tunel(MAPA_ANCHO)
         pacman.actualizar_animacion()
         pacman.actualizar_super()
 
@@ -131,11 +151,26 @@ while jugando:
     for punto in grupo_puntos:
         punto.flash_power_pellet()
 
-    pantalla.fill((0, 0, 0))
+    high_score = HUD.actualizar_high_score(
+        pacman,
+        high_score
+    )
 
-    grupo_paredes.draw(pantalla)
-    grupo_puntos.draw(pantalla)
-    pacman.dibujar(pantalla)
+    pantalla.fill((0, 0, 0))
+    mapa_surface.fill((0, 0, 0))
+
+    grupo_paredes.draw(mapa_surface)
+    grupo_puntos.draw(mapa_surface)
+    pacman.dibujar(mapa_surface)
+
+    pantalla.blit(mapa_surface, (0, HUD_ARRIBA))
+
+    HUD.dibujar_hud(
+        pantalla,
+        pacman,
+        high_score,
+        fuente
+    )
 
     pg.display.flip()
 
