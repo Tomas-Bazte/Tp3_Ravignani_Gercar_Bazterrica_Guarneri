@@ -113,6 +113,7 @@ while jugando:
             )
     else:
         pacman.Choque(dt,TILE_SIZE,grupo_paredes)
+        pacman.manejar_tunel(ANCHO)
         pacman.actualizar_animacion()
         pacman.actualizar_super()
 

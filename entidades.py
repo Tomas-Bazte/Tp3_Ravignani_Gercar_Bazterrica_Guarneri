@@ -197,4 +197,14 @@ class PacMan (Criatura):
             imagen = pg.transform.scale(imagen, (self.radio * 2.8, self.radio * 2.8)) # 2.8 es una escala aproximada para que la imagen quede del mismo tamaño que el PacMan
             self.frames_muerte.append(imagen)
     
+    def manejar_tunel(self, ancho_pantalla):
+    # Si PacMan sale completamente por la izquierda, aparece del otro lado, por la derecha.
+        if self.x < -self.radio:
+            self.x = ancho_pantalla + self.radio
+        # Si PacMan sale completamente por la derecha, aparece del otro lado, por la izquierda.
+        elif self.x > ancho_pantalla + self.radio:
+            self.x = -self.radio
+        # Actualizamos el rect para que el hitbox quede en la nueva posicion.
+        self.rect.center = (int(self.x), int(self.y))
+    
    
