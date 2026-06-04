@@ -20,15 +20,15 @@ class pared (pg.sprite.Sprite):
 
 
 class puntitos (pg.sprite.Sprite):
-    def __init__ (self,x,y,Super=False):
+    def __init__ (self,x,y,Super=False,tile_size=24):
         super().__init__()
         self.es_power_pellet = Super
-        radio = (7 if Super else 3)
+        radio = (int(tile_size//4) if Super else int(tile_size//8))
         tamaño = radio*2
         self.image = pg.Surface((tamaño,tamaño),pg.SRCALPHA)
         pg.draw.circle(self.image,(255,255,255),(radio,radio),radio)
         self.rect = self.image.get_rect()
-        self.rect.center = (x+12,y+12)
+        self.rect.center = (int(x+(tile_size//2)),int(y+(tile_size//2)))
     
     def flash_power_pellet(self):
         if self.es_power_pellet:
@@ -62,13 +62,13 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
             x = columna * tamaño_casillero
             y = fila * tamaño_casillero
             if Caracter == "X":
-               Nueva_pared= pared(x, y, tamaño_casillero)
+               Nueva_pared= pared(x, y, tamaño_casillero-0.000001)
                grupo_Paredes.add(Nueva_pared)
             elif Caracter == ".":
-                Nuevo_punto = puntitos(x,y,False)
+                Nuevo_punto = puntitos(x,y,False,tamaño_casillero)
                 grupo_puntos.add(Nuevo_punto)
             elif Caracter == "o":
-                Nuevo_punto = puntitos(x,y,True)
+                Nuevo_punto = puntitos(x,y,True,tamaño_casillero)
                 grupo_puntos.add(Nuevo_punto)
             elif Caracter == "P":
                 Pos_Pm = (x,y)

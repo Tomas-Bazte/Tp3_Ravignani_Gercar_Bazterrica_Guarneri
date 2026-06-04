@@ -8,7 +8,7 @@ pg.init()
 pg.mixer.init()
 pg.font.init()
 
-TILE_SIZE = 24
+TILE_SIZE = 18
 
 MAPA_ANCHO = 28 * TILE_SIZE
 MAPA_ALTO = 31 * TILE_SIZE

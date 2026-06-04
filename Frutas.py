@@ -63,8 +63,9 @@ class Frutas(pg.sprite.Sprite):
         else:
             self.tipo = frutas_nivel[nivel]
     def comer_frutas(self, pacman):
-        pacman.sumar_puntos(self.puntos)
-        self.kill()
+        if pacman.rect.colliderect(self.rect):
+            pacman.sumar_puntos(self.puntos)
+            self.kill()
     
 
 

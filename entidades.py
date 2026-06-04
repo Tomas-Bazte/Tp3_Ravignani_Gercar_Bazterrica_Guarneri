@@ -1,7 +1,6 @@
 import pygame as pg
 import math
-
-TILE_SIZE = 24
+TILE_SIZE = 18
 
 class Criatura(pg.sprite.Sprite):
     def __init__(self,x,y,velocidad):
@@ -10,7 +9,7 @@ class Criatura(pg.sprite.Sprite):
         self.velocidad = velocidad # tiles/segundo
         self.direccion = "quieto"
         self.prox = "quieto"
-        self.radio = 10 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
+        self.radio = (TILE_SIZE/2)-2 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
 
     
     def mover(self, dt, tile_size=24):  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
@@ -51,7 +50,7 @@ class Criatura(pg.sprite.Sprite):
 
 
     def obtener_hitbox(self):
-        return pg.Rect(self.x - 12, self.y - 12, 24,24)
+        return self.rect
          
 class PacMan (Criatura):
     velocidad_normal = 6 # 80 % de 7.5 - tiles/segundo
@@ -60,7 +59,7 @@ class PacMan (Criatura):
         super().__init__(x, y, PacMan.velocidad_normal)
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((self.radio*2,self.radio*2),pg.SRCALPHA)
-        self.rect = self.rect = pg.Rect(0,0,23,23) 
+        self.rect = pg.Rect(0,0,TILE_SIZE,TILE_SIZE) 
         self.rect.center= (x,y)
         self.vidas = 3
         self.puntaje = 0
@@ -83,9 +82,6 @@ class PacMan (Criatura):
         self.sonido_dot_1 = pg.mixer.Sound("sonidos_pacman/eat_dot_1.wav")
         self.sonido_fright = pg.mixer.Sound("sonidos_pacman/fright.wav")
         self.alternar_sonido_dot = 0
-        self.es_griddy = False
-        self.frame_griddy_actual = 0
-        self.tiempo_ultimo_frame_griddy = 0
         
     def cambiar_direccion(self, tecla):
         if tecla == pg.K_RIGHT or tecla == pg.K_d:
@@ -98,8 +94,6 @@ class PacMan (Criatura):
             self.prox = "abajo"
             
     def dibujar(self,pantalla):
-        if self.es_griddy:
-            self._dibujar_griddy(pantalla)
         centro = (int(self.x), int(self.y))
         if self.estado == "muriendo":
             if self.frame_muerte_actual < len(self.frames_muerte):
@@ -213,10 +207,10 @@ class PacMan (Criatura):
     
     def cargar_frames_muerte(self):
         self.frames_muerte = []
-
+        escala = TILE_SIZE * 0.95 
         for i in range(13):
             imagen = pg.image.load(f"pacman_muerte/pacman_death_{i:02}.png").convert_alpha()
-            imagen = pg.transform.scale(imagen, (self.radio * 2.8, self.radio * 2.8)) # 2.8 es una escala aproximada para que la imagen quede del mismo tamaño que el PacMan
+            imagen = pg.transform.scale(imagen, (int(escala), int(escala))) # 2.8 es una escala aproximada para que la imagen quede del mismo tamaño que el PacMan
             self.frames_muerte.append(imagen)
     
     def manejar_tunel(self, ancho_pantalla):
