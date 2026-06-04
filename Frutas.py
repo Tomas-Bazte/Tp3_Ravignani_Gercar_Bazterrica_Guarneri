@@ -62,6 +62,9 @@ class Frutas(pg.sprite.Sprite):
             self.tipo = "key"
         else:
             self.tipo = frutas_nivel[nivel]
+    def comer_frutas(self, pacman):
+        pacman.sumar_puntos(self.puntos)
+        self.kill()
     
 
 
