@@ -24,7 +24,7 @@ class Criatura(pg.sprite.Sprite):
         elif self.direccion == "abajo":
             self.y += desplazamiento
     
-    def Choque (self,dt,tile_size=24,paredes=None):
+    def Choque (self,dt,tile_size=24,paredes=None,puertas=None):
         if self.prox != self.direccion and self.prox != "quieto":
             direccion_ant = self.direccion
             self.direccion = self.prox
@@ -32,7 +32,7 @@ class Criatura(pg.sprite.Sprite):
             self.mover(dt , tile_size)
             self.rect.center = (int(self.x), int(self.y))
 
-            if pg.sprite.spritecollide (self,paredes,False):
+            if pg.sprite.spritecollide (self,paredes,False) or pg.sprite.spritecollide (self, puertas,False) :
                 self.x , self.y = xor , yor
                 self.direccion = direccion_ant
                 self.rect.center = (int(self.x), int(self.y))
@@ -44,7 +44,7 @@ class Criatura(pg.sprite.Sprite):
             self.mover (dt , tile_size)
             self.rect.center = (int(self.x), int(self.y))
 
-            if pg.sprite.spritecollide (self, paredes,False):
+            if pg.sprite.spritecollide (self, paredes,False) or pg.sprite.spritecollide (self, puertas,False):
                 self.x, self.y = xor, yor
                 self.rect.center = (int(self.x), int(self.y))
 
@@ -60,7 +60,7 @@ class PacMan (Criatura):
         super().__init__(x, y, PacMan.velocidad_normal)
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((self.radio*2,self.radio*2),pg.SRCALPHA)
-        self.rect = self.rect = pg.Rect(0,0,22,22) 
+        self.rect = self.rect = pg.Rect(0,0,23,23) 
         self.rect.center= (x,y)
         self.vidas = 3
         self.puntaje = 0
@@ -83,6 +83,9 @@ class PacMan (Criatura):
         self.sonido_dot_1 = pg.mixer.Sound("sonidos_pacman/eat_dot_1.wav")
         self.sonido_fright = pg.mixer.Sound("sonidos_pacman/fright.wav")
         self.alternar_sonido_dot = 0
+        self.es_griddy = False
+        self.frame_griddy_actual = 0
+        self.tiempo_ultimo_frame_griddy = 0
         
     def cambiar_direccion(self, tecla):
         if tecla == pg.K_RIGHT or tecla == pg.K_d:
@@ -95,6 +98,8 @@ class PacMan (Criatura):
             self.prox = "abajo"
             
     def dibujar(self,pantalla):
+        if self.es_griddy:
+            self._dibujar_griddy(pantalla)
         centro = (int(self.x), int(self.y))
         if self.estado == "muriendo":
             if self.frame_muerte_actual < len(self.frames_muerte):
@@ -224,4 +229,3 @@ class PacMan (Criatura):
         # Actualizamos el rect para que el hitbox quede en la nueva posicion.
         self.rect.center = (int(self.x), int(self.y))
     
-   
