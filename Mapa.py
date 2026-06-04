@@ -20,7 +20,7 @@ class pared (pg.sprite.Sprite):
 
 
 class puntitos (pg.sprite.Sprite):
-    def __init__ (self,x,y,Super=False,tile_size=24):
+    def __init__ (self,x,y,Super=False,tile_size=18):
         super().__init__()
         self.es_power_pellet = Super
         radio = (int(tile_size//4) if Super else int(tile_size//8))
@@ -51,7 +51,7 @@ class Puerta_H (pg.sprite.Sprite):
         pg.draw.line(self.image,(255,255,255),(0,0),(tamaño,0),5)
 
 
-def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 24) -> None:
+def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 18) -> None:
     grupo_Paredes = pg.sprite.Group()
     grupo_puntos = pg.sprite.Group()
     Puerta = pg.sprite.Group()

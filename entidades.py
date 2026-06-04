@@ -9,10 +9,10 @@ class Criatura(pg.sprite.Sprite):
         self.velocidad = velocidad # tiles/segundo
         self.direccion = "quieto"
         self.prox = "quieto"
-        self.radio = (TILE_SIZE/2)-2 # Radio de pixeles por default, tomando en cuenta el size del tile como 24x24 pixeles
+        self.radio = (TILE_SIZE/2)-2 # Radio de pixeles por default, tomando en cuenta el size del tile como 18x18 pixeles
 
     
-    def mover(self, dt, tile_size=24):  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
+    def mover(self, dt, tile_size=18):  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
         desplazamiento = self.velocidad * tile_size * dt
         if self.direccion == "derecha":
             self.x += desplazamiento
@@ -23,7 +23,7 @@ class Criatura(pg.sprite.Sprite):
         elif self.direccion == "abajo":
             self.y += desplazamiento
     
-    def Choque (self,dt,tile_size=24,paredes=None,puertas=None):
+    def Choque (self,dt,tile_size=18,paredes=None,puertas=None):
         if self.prox != self.direccion and self.prox != "quieto":
             direccion_ant = self.direccion
             self.direccion = self.prox
@@ -208,10 +208,10 @@ class PacMan (Criatura):
     
     def cargar_frames_muerte(self):
         self.frames_muerte = []
-        escala = TILE_SIZE * 0.95 
+        escala = TILE_SIZE
         for i in range(13):
             imagen = pg.image.load(f"pacman_muerte/pacman_death_{i:02}.png").convert_alpha()
-            imagen = pg.transform.scale(imagen, (int(escala), int(escala))) # 2.8 es una escala aproximada para que la imagen quede del mismo tamaño que el PacMan
+            imagen = pg.transform.scale(imagen, (int(escala), int(escala))) 
             self.frames_muerte.append(imagen)
     
     def manejar_tunel(self, ancho_pantalla):
