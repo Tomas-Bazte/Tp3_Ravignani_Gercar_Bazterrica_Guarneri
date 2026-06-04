@@ -136,7 +136,7 @@ class PacMan (Criatura):
             self.vida_extra_dada = True
     
     def perder_vida(self):
-        if self.vidas > 0:
+        if self.vidas >= 0:
             self.vidas -= 1
         self.direccion = "quieto"
 
@@ -189,6 +189,7 @@ class PacMan (Criatura):
         self.estado = "muriendo"
         self.direccion = "quieto"
         self.frame_muerte_actual = 0
+        self.sonido_fright.stop()
         self.tiempo_ultimo_frame_muerte = pg.time.get_ticks()
         self.sonido_muerte.play()
     

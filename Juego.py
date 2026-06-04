@@ -19,6 +19,10 @@ HUD_ABAJO = 45
 ANCHO = MAPA_ANCHO
 ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
 
+GAME_OVER = False
+Texto = 0
+Duracion_GO= 3000
+
 Inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
 Cinematica = pg.mixer.Sound("sonidos_pacman/intermission.wav")
 Inicio.play()
@@ -63,9 +67,8 @@ while jugando:
                 pacman.cambiar_direccion(evento.key)
     
     if not grupo_puntos :
+        grupo_paredes, grupo_puntos, Pos_Pm , Puertas = Dibujar_Mapa(mapa_surface,mapa,TILE_SIZE)
         #Aca va la funcion que reinicia el mapa una vez que no quedan puntos.
-        Resetea = ""
-        continue
 
     if pacman.estado == "muriendo":
         if pacman.actualizar_muerte():
@@ -115,7 +118,15 @@ while jugando:
         high_score,
         fuente
     )
-
+    if pacman.vidas < 0:
+        Tiempo = pg.time.get_ticks()
+        pantalla.fill((0,0,0))
+        Fuente = pg.font.SysFont("Courier", 80, bold=True)
+        Texto = Fuente.render("GAME OVER", True, (255, 255, 255))
+        rect_Texto = Texto.get_rect(center=(ANCHO//2, ALTO//2))
+        pantalla.blit(Texto, rect_Texto)
+        if pg.time.get_ticks() - Tiempo >= Duracion_GO:
+            jugando = False
     pg.display.flip()
 
 pg.quit()

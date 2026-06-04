@@ -26,7 +26,7 @@ def dibujar_hud_arriba(pantalla, pacman, fuente, high_score):
     texto_score = fuente.render(str(pacman.puntaje).rjust(7), True, (255, 255, 255)) # rjust(7) lo uso considerando el maximo score posible de PacMan
     texto_high = fuente.render("HIGH SCORE", True, (255, 255, 255))
     texto_high_score = fuente.render(str(high_score).rjust(7), True, (255, 255, 255))
-    pantalla.blit(texto_1up, (w*0.115, 5)) # Dibuja al texto_1up en la posicion (85,5)
+    pantalla.blit(texto_1up, (w*0.10, 5)) # Dibuja al texto_1up en la posicion (85,5)
     pantalla.blit(texto_score, (w*0.001, 32))
     pantalla.blit(texto_high, (w*0.55, 5))
     pantalla.blit(texto_high_score, (w*0.55, 32))
