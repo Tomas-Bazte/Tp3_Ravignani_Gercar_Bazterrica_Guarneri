@@ -1,5 +1,5 @@
 import pygame as pg
-Frutas = {
+Frutas_dic = {
  "cherry" : {
 "imagen" : "cherry.png",
 "puntos": 100
@@ -49,23 +49,46 @@ frutas_nivel = {
                 13 : "key"
                 }
 class Frutas(pg.sprite.Sprite):
-    def __init__(self, x, y, Frutas):
+    def __init__(self, x, y, nivel, tile_size = 18):
         super().__init__()
         self.x = x
         self.y = y
-        self.tipo = 0 # lo detectara solo cuando tengamos el numero de nivel
-        self. puntos = Frutas[self.tipo]["puntos"]
-        self.imagen = Frutas[self.tipo]["imagen"]
+        self.tipo = self.obtener_tipo(nivel)
+        self.puntos = Frutas_dic[self.tipo]["puntos"]
+        self.tamaño_fruta = int(tile_size * 0.85)
+        self.image = pg.image.load(f"fruits/{Frutas_dic[self.tipo]["imagen"]}").convert_alpha()
+        self.image = pg.transform.scale(self.image, (self.tamaño_fruta, self.tamaño_fruta)) # Para que este a escala.
+        self.rect = self.image.get_rect()
+        self.rect.center = (x,y)
+        self.tiempo_aparicion = pg.time.get_ticks()
+        self.duracion_texto = 1000 # 1 segundo
+        self.duracion_visible = 9000 # 9 segundos
+        self.fuente_texto_puntos = pg.font.SysFont("Courier", 12, bold=True)
+        self.comida = False
+    
+    def actualizar(self):
+        tiempo_actual = pg.time.get_ticks()
+        if not self.comida: # Si la fruta no fue comida, verificamos si pasaron los 9 segundos de vida.
+            if tiempo_actual - self.tiempo_aparicion >= self.duracion_visible:
+                self.kill()
+        else: # Si la fruta fue comida, ahora estamos mostrando el texto de los puntos que aparece durante un segundo.
+            if tiempo_actual - self.tiempo_comida >= self.duracion_texto:
+                    self.kill() # Texto dsp de un segundo desaparece.
+    
+    def obtener_tipo(self,nivel):
+        if nivel >= 13:
+            return "key"
+        return frutas_nivel[nivel]
 
-    def obtener_frutas_nivel(self, nivel, frutas_nivel):
-        if nivel > 12:
-            self.tipo = "key"
-        else:
-            self.tipo = frutas_nivel[nivel]
     def comer_frutas(self, pacman):
+        if self.comida:
+            return        
         if pacman.rect.colliderect(self.rect):
             pacman.sumar_puntos(self.puntos)
-            self.kill()
+            self.comida = True
+            self.tiempo_comida = pg.time.get_ticks()
+            self.image = self.fuente_texto_puntos.render(str(self.puntos), True, (255,184,255)) # Texto rosado puntos
+            self.rect = self.image.get_rect(center=(self.x, self.y))
     
 
 
