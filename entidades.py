@@ -12,8 +12,8 @@ class Criatura(pg.sprite.Sprite):
         self.radio = (TILE_SIZE/2)-2 # Radio de pixeles por default, tomando en cuenta el size del tile como 18x18 pixeles
 
     
-    def mover(self, dt, tile_size=18):  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
-        desplazamiento = self.velocidad * tile_size * dt
+    def mover(self, dt, tile_size=18,velocidad = 10):  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
+        desplazamiento = velocidad * tile_size * dt
         if self.direccion == "derecha":
             self.x += desplazamiento
         elif self.direccion == "izquierda":
@@ -28,7 +28,7 @@ class Criatura(pg.sprite.Sprite):
             direccion_ant = self.direccion
             self.direccion = self.prox
             xor , yor = self.x , self.y
-            self.mover(dt , tile_size)
+            self.mover(dt , tile_size,self.velocidad + 1)
             self.rect.center = (int(self.x), int(self.y))
 
             if pg.sprite.spritecollide (self,paredes,False) or pg.sprite.spritecollide (self, puertas,False) :
@@ -40,7 +40,7 @@ class Criatura(pg.sprite.Sprite):
         
         if self.direccion != "quieto":
             xor , yor = self.x , self.y
-            self.mover (dt , tile_size)
+            self.mover (dt , tile_size,self.velocidad)
             self.rect.center = (int(self.x), int(self.y))
 
             if pg.sprite.spritecollide (self, paredes,False) or pg.sprite.spritecollide (self, puertas,False):
