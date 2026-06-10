@@ -161,3 +161,15 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 18) -> None:
 def cambiar_color(self, color): # Funcion que sirve para cambiar el color del mapa de azul a blanco cuanto termine el nivel.
     self.image.fill((0, 0, 0))
     pg.draw.rect(self.image,color,self.image.get_rect(),1)
+    
+def dibujar_ready(mapa_surface):
+    fuente_ready = pg.font.SysFont("Courier", 19, bold=True)
+    texto = fuente_ready.render("READY!",True,(255, 255, 0))
+    rect = texto.get_rect(center=(MAPA_ANCHO // 2, 17.5 * TILE_SIZE)) # El 17.5 * Tile size fui probando hasta que quedo justo en el medio
+    mapa_surface.blit(texto, rect)
+
+def dibujar_game_over(mapa_surface):
+    fuente_game_over = pg.font.SysFont("Courier", 16, bold=True)
+    texto = fuente_game_over.render("GAME  OVER",True,(255, 0, 0))
+    rect = texto.get_rect(center=(MAPA_ANCHO // 2, 17.5 * TILE_SIZE))
+    mapa_surface.blit(texto, rect)

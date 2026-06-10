@@ -2,7 +2,7 @@ import pygame as pg
 import HUD
 
 from entidades import PacMan
-from Mapa import Cargar_Mapa, Dibujar_Mapa, menu_inicio
+from Mapa import Cargar_Mapa, Dibujar_Mapa, menu_inicio, dibujar_ready, dibujar_game_over
 from Frutas import Frutas
 from Intermissions import Intermission
 
@@ -62,7 +62,7 @@ POS_FRUTA = (
     17 * TILE_SIZE + TILE_SIZE // 2
 )
 
-estado_juego = "jugando"
+estado_juego = "ready"
 tiempo_inicio_estado = 0
 
 duracion_pausa_nivel = 1000
@@ -72,8 +72,8 @@ Tiempo = 0
 Duracion_GO = 3000
 contando = False
 
-inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
-inicio.play()
+sonido_inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
+canal_inicio = None
 
 
 def cambiar_color_paredes(grupo_paredes, color):
@@ -94,6 +94,9 @@ def iniciar_intermission_por_nivel(nivel_a_probar):
 
 jugando = True
 menu_inicio(pantalla)
+
+# El start.wav suena una sola vez, al empezar la partida.
+canal_inicio = sonido_inicio.play()
 
 while jugando:
     dt = reloj.tick(60) / 1000
@@ -140,7 +143,12 @@ while jugando:
     # UPDATE
     # ---------------------
 
-    if estado_juego == "jugando":
+    if estado_juego == "ready":
+
+        if canal_inicio is None or not canal_inicio.get_busy():
+            estado_juego = "jugando"
+
+    elif estado_juego == "jugando":
 
         if len(grupo_puntos) == 0:
             estado_juego = "pausa_nivel"
@@ -296,6 +304,12 @@ while jugando:
 
     pacman.dibujar(mapa_surface)
 
+    if estado_juego == "ready":
+        dibujar_ready(mapa_surface)
+
+    elif estado_juego == "game_over":
+        dibujar_game_over(mapa_surface)
+
     pantalla.blit(
         mapa_surface,
         (0, HUD_ARRIBA)
@@ -307,24 +321,6 @@ while jugando:
         high_score,
         fuente
     )
-
-    if estado_juego == "game_over":
-
-        pantalla.fill((0, 0, 0))
-
-        Fuente = pg.font.SysFont("Courier", 80, bold=True)
-
-        Texto = Fuente.render(
-            "GAME OVER",
-            True,
-            (255, 255, 255)
-        )
-
-        rect_Texto = Texto.get_rect(
-            center=(ANCHO // 2, ALTO // 2)
-        )
-
-        pantalla.blit(Texto, rect_Texto)
 
     pg.display.flip()
 
