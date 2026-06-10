@@ -4,11 +4,12 @@ import HUD
 from entidades import PacMan
 from Mapa import Cargar_Mapa, Dibujar_Mapa
 from Frutas import Frutas
-from entidades import TILE_SIZE
 
 pg.init()
 pg.mixer.init()
 pg.font.init()
+
+TILE_SIZE = 18
 
 MAPA_ANCHO = 28 * TILE_SIZE
 MAPA_ALTO = 31 * TILE_SIZE
@@ -19,16 +20,8 @@ HUD_ABAJO = 45
 ANCHO = MAPA_ANCHO
 ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
 
-GAME_OVER = False
-Texto = 0
-Duracion_GO= 3000
-
-Inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
-Cinematica = pg.mixer.Sound("sonidos_pacman/intermission.wav")
-Inicio.play()
-
 pantalla = pg.display.set_mode((ANCHO, ALTO))
-pg.display.set_caption("Pac-Man")
+pg.display.set_caption("Test Pac-Man")
 
 mapa_surface = pg.Surface((MAPA_ANCHO, MAPA_ALTO))
 
@@ -113,6 +106,10 @@ while jugando:
                 elif pacman.estado != "muriendo":
                     pacman.cambiar_direccion(evento.key)
 
+    # ---------------------
+    # UPDATE
+    # ---------------------
+
     if estado_juego == "jugando":
 
         if len(grupo_puntos) == 0:
@@ -131,7 +128,13 @@ while jugando:
                 )
 
         else:
-            pacman.Choque(dt, TILE_SIZE, grupo_paredes, Puertas)
+            pacman.Choque(
+                dt,
+                TILE_SIZE,
+                grupo_paredes,
+                Puertas
+            )
+
             pacman.manejar_tunel(MAPA_ANCHO)
             pacman.actualizar_animacion()
             pacman.actualizar_super()
@@ -183,7 +186,7 @@ while jugando:
 
         tiempo_actual = pg.time.get_ticks()
 
-        if (tiempo_actual // 300) % 2 == 0:
+        if (tiempo_actual // 250) % 2 == 0:
             cambiar_color_paredes(grupo_paredes, (0, 0, 255))
         else:
             cambiar_color_paredes(grupo_paredes, (255, 255, 255))
@@ -217,6 +220,10 @@ while jugando:
         high_score
     )
 
+    # ---------------------
+    # DIBUJAR
+    # ---------------------
+
     pantalla.fill((0, 0, 0))
     mapa_surface.fill((0, 0, 0))
 
@@ -225,10 +232,14 @@ while jugando:
     if estado_juego != "flash_mapa":
         grupo_puntos.draw(mapa_surface)
         grupo_frutas.draw(mapa_surface)
-        pacman.dibujar(mapa_surface)
         Puertas.draw(mapa_surface)
 
-    pantalla.blit(mapa_surface, (0, HUD_ARRIBA))
+    pacman.dibujar(mapa_surface)
+
+    pantalla.blit(
+        mapa_surface,
+        (0, HUD_ARRIBA)
+    )
 
     HUD.dibujar_hud(
         pantalla,
@@ -236,6 +247,31 @@ while jugando:
         high_score,
         fuente
     )
+
+    if estado_juego == "game_over":
+
+        pantalla.fill((0, 0, 0))
+
+        fuente_game_over = pg.font.SysFont(
+            "Courier",
+            80,
+            bold=True
+        )
+
+        texto = fuente_game_over.render(
+            "GAME OVER",
+            True,
+            (255, 255, 255)
+        )
+
+        rect_texto = texto.get_rect(
+            center=(ANCHO // 2, ALTO // 2)
+        )
+
+        pantalla.blit(
+            texto,
+            rect_texto
+        )
 
     pg.display.flip()
 

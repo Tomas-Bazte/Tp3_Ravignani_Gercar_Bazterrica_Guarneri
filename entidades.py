@@ -53,7 +53,7 @@ class Criatura(pg.sprite.Sprite):
         return self.rect
          
 class PacMan (Criatura):
-    velocidad_normal = 6 # 80 % de 7.5 - tiles/segundo
+    velocidad_normal = 10 # 80 % de 7.5 - tiles/segundo
     velocidad_super = 6.75 # 90 % de 7.5
     def __init__(self, x, y):
         super().__init__(x, y, PacMan.velocidad_normal)
@@ -82,6 +82,7 @@ class PacMan (Criatura):
         self.sonido_dot_1 = pg.mixer.Sound("sonidos_pacman/eat_dot_1.wav")
         self.sonido_fright = pg.mixer.Sound("sonidos_pacman/fright.wav")
         self.alternar_sonido_dot = 0
+        self.nivel_completado = 0
         
     def cambiar_direccion(self, tecla):
         if tecla == pg.K_RIGHT or tecla == pg.K_d:
@@ -95,6 +96,9 @@ class PacMan (Criatura):
             
     def dibujar(self,pantalla):
         centro = (int(self.x), int(self.y))
+        if self.nivel_completado:
+            pg.draw.circle(pantalla,(255,255,0),(int(self.x), int(self.y)),self.radio)
+            return
         if self.estado == "muriendo":
             if self.frame_muerte_actual < len(self.frames_muerte):
                 imagen = self.frames_muerte[self.frame_muerte_actual]
@@ -117,6 +121,9 @@ class PacMan (Criatura):
     
     def actualizar_animacion(self):
         if self.direccion == "quieto":
+            return
+        if self.nivel_completado:
+            self.boca = 0
             return
         if self.boca_abriendo:
             self.frame_animacion += self.velocidad_animacion_boca
