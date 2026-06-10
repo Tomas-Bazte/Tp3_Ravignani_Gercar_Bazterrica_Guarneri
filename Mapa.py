@@ -80,3 +80,7 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 18) -> None:
 
                 
     return grupo_Paredes, grupo_puntos, Pos_Pm , Puerta
+
+def cambiar_color(self, color): # Funcion que sirve para cambiar el color del mapa de azul a blanco cuanto termine el nivel.
+    self.image.fill((0, 0, 0))
+    pg.draw.rect(self.image,color,self.image.get_rect(),1)

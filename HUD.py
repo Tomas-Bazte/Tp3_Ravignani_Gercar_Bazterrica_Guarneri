@@ -22,7 +22,11 @@ def actualizar_high_score(pacman, high_score):
 
 def dibujar_hud_arriba(pantalla, pacman, fuente, high_score):
     w = pantalla.get_width()
-    texto_1up = fuente.render("1UP", True, (255, 255, 255)) # Devuelve un pygame.Surface. El true es para los bordes suaves del texto
+    tiempo = pg.time.get_ticks()
+    if (tiempo // 300) % 2 == 0:
+        texto_1up = fuente.render("1UP", True, (255, 255, 255))  # Devuelve un pygame.Surface. El true es para los bordes suaves del texto
+    else:
+        texto_1up = fuente.render("1UP", True, (0, 0, 0))
     texto_score = fuente.render(str(pacman.puntaje).rjust(7), True, (255, 255, 255)) # rjust(7) lo uso considerando el maximo score posible de PacMan
     texto_high = fuente.render("HIGH SCORE", True, (255, 255, 255))
     texto_high_score = fuente.render(str(high_score).rjust(7), True, (255, 255, 255))
