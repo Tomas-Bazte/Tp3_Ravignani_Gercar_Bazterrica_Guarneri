@@ -85,6 +85,8 @@ class Frutas(pg.sprite.Sprite):
             return        
         if pacman.rect.colliderect(self.rect):
             pacman.sumar_puntos(self.puntos)
+            sonido_fruta = pg.mixer.Sound("sonidos_pacman/eat_fruit.wav")
+            sonido_fruta.play()
             self.comida = True
             self.tiempo_comida = pg.time.get_ticks()
             self.image = self.fuente_texto_puntos.render(str(self.puntos), True, (255,184,255)) # Texto rosado puntos

@@ -36,6 +36,8 @@ def menu_inicio(pantalla):
 
             if evento.type == pg.KEYDOWN:
                 if evento.key == pg.K_SPACE:
+                    inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
+                    inicio.play()
                     menu = False
 
                 if evento.key == pg.K_ESCAPE:
