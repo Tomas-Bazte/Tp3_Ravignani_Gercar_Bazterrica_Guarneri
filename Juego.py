@@ -24,6 +24,8 @@ ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
 pantalla = pg.display.set_mode((ANCHO, ALTO))
 pg.display.set_caption("Test Pac-Man")
 
+HUD.cargar_frutas_hud()
+
 mapa_surface = pg.Surface((MAPA_ANCHO, MAPA_ALTO))
 
 reloj = pg.time.Clock()

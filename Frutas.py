@@ -85,6 +85,7 @@ class Frutas(pg.sprite.Sprite):
             return        
         if pacman.rect.colliderect(self.rect):
             pacman.sumar_puntos(self.puntos)
+            pacman.frutas_comidas.append(self.tipo)
             sonido_fruta = pg.mixer.Sound("sonidos_pacman/eat_fruit.wav")
             sonido_fruta.play()
             self.comida = True

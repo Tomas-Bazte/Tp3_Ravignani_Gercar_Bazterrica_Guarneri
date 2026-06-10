@@ -1,7 +1,22 @@
 import pygame as pg
 
-
+FRUTAS_HUD = {}
 ARCHIVO_HIGH_SCORE = "high_score.txt"
+
+def cargar_frutas_hud():
+    global FRUTAS_HUD
+    FRUTAS_HUD = {
+        "cherry": pg.image.load("fruits/cherry.png").convert_alpha(),
+        "strawberry": pg.image.load("fruits/strawberry.png").convert_alpha(),
+        "orange": pg.image.load("fruits/orange.png").convert_alpha(),
+        "apple": pg.image.load("fruits/apple.png").convert_alpha(),
+        "melon": pg.image.load("fruits/melon.png").convert_alpha(),
+        "galaxian": pg.image.load("fruits/galaxian.png").convert_alpha(),
+        "bell": pg.image.load("fruits/bell.png").convert_alpha(),
+        "key": pg.image.load("fruits/key.png").convert_alpha()
+    }
+    for fruta in FRUTAS_HUD:
+        FRUTAS_HUD[fruta] = pg.transform.scale(FRUTAS_HUD[fruta],(24, 24))
 
 def cargar_high_score():
     try:
@@ -44,7 +59,16 @@ def dibujar_hud_abajo(pantalla, pacman):
         # Boca mirando a la izquierda
         boca = [(x, y),(x - 10, y - 5),(x - 10, y + 5)]
         pg.draw.polygon(pantalla, (0, 0, 0), boca)
-        
+
+def dibujar_frutas_hud(pantalla, pacman):
+    y = pantalla.get_height() - 36 # Fui probando hasta donde quede perfecto
+    frutas_visibles = pacman.frutas_comidas[-7:]
+    x = pantalla.get_width() - 32
+    for fruta in reversed(frutas_visibles): # reversed para q aparezca la fruta comida primero mas hacia la derecha
+        pantalla.blit(FRUTAS_HUD[fruta],(x, y))
+        x = x - 28 # Pixeles entre frutas.
+
 def dibujar_hud(pantalla, pacman, high_score, fuente):
-    dibujar_hud_arriba(pantalla, pacman, fuente, high_score)
-    dibujar_hud_abajo(pantalla, pacman)
+    dibujar_hud_arriba(pantalla,pacman,fuente,high_score)
+    dibujar_hud_abajo(pantalla,pacman)
+    dibujar_frutas_hud(pantalla,pacman)

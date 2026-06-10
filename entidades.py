@@ -83,6 +83,7 @@ class PacMan (Criatura):
         self.sonido_fright = pg.mixer.Sound("sonidos_pacman/fright.wav")
         self.alternar_sonido_dot = 0
         self.nivel_completado = 0
+        self.frutas_comidas = []
         
     def cambiar_direccion(self, tecla):
         if tecla == pg.K_RIGHT or tecla == pg.K_d:
