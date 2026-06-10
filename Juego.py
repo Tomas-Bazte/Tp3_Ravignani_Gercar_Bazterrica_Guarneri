@@ -62,8 +62,8 @@ tiempo_inicio_estado = 0
 duracion_pausa_nivel = 1000
 duracion_flash_mapa = 3000
 
-tiempo_inicio_game_over = 0
-duracion_game_over = 3000
+Tiempo = 0
+Duracion_GO = 2000
 
 inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
 inicio.play()
@@ -91,6 +91,7 @@ while jugando:
 
         if evento.type == pg.KEYDOWN:
             if estado_juego == "jugando":
+
                 if evento.key == pg.K_m and pacman.estado != "muriendo":
                     pacman.iniciar_muerte()
 
@@ -118,6 +119,8 @@ while jugando:
 
             pacman.direccion = "quieto"
             pacman.prox = "quieto"
+            pacman.nivel_completado = True
+            pacman.frame_animacion = 0
 
         elif pacman.estado == "muriendo":
 
@@ -174,6 +177,7 @@ while jugando:
 
             if pacman.vidas < 0:
                 estado_juego = "game_over"
+                tiempo_inicio_game_over = pg.time.get_ticks()
 
     elif estado_juego == "pausa_nivel":
 
@@ -207,16 +211,12 @@ while jugando:
                 Pos_Pm[1] + TILE_SIZE // 2
             )
 
+            pacman.nivel_completado = False
             estado_juego = "jugando"
 
     elif estado_juego == "game_over":
-        Tiempo = pg.time.get_ticks()
-        pantalla.fill((0,0,0))
-        Fuente = pg.font.SysFont("Courier", 80, bold=True)
-        Texto = Fuente.render("GAME OVER", True, (255, 255, 255))
-        rect_Texto = Texto.get_rect(center=(ANCHO//2, ALTO//2))
-        pantalla.blit(Texto, rect_Texto)
-        if pg.time.get_ticks() - Tiempo >= Duracion_GO:
+
+        if pg.time.get_ticks() - tiempo_inicio_game_over >= duracion_game_over:
             jugando = False
 
     high_score = HUD.actualizar_high_score(

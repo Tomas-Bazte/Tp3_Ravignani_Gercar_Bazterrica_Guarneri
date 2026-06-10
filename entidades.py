@@ -53,7 +53,7 @@ class Criatura(pg.sprite.Sprite):
         return self.rect
          
 class PacMan (Criatura):
-    velocidad_normal = 10 # 80 % de 7.5 - tiles/segundo
+    velocidad_normal = 6 # 80 % de 7.5 - tiles/segundo
     velocidad_super = 6.75 # 90 % de 7.5
     def __init__(self, x, y):
         super().__init__(x, y, PacMan.velocidad_normal)
