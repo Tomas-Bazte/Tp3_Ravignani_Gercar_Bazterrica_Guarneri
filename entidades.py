@@ -61,7 +61,7 @@ class PacMan (Criatura):
         self.image = pg.Surface((self.radio*2,self.radio*2),pg.SRCALPHA)
         self.rect = pg.Rect(0,0,TILE_SIZE,TILE_SIZE) 
         self.rect.center= (x,y)
-        self.vidas = 3
+        self.vidas = 2 # La que ya tiene + 2 mas = 3
         self.puntaje = 0
         self.estado = "normal" # normal, muriendo
         self.frame_animacion = 0 # frame_animacion = 0 - boca casi cerrada, frame_animacion = 5  - boca media abierta, frame_animacion = 10 - boca muy abierta

@@ -65,6 +65,7 @@ class Frutas(pg.sprite.Sprite):
         self.duracion_visible = 9000 # 9 segundos
         self.fuente_texto_puntos = pg.font.SysFont("Courier", 12, bold=True)
         self.comida = False
+        self.sonido_fruta = pg.mixer.Sound("sonidos_pacman/eat_fruit.wav")
     
     def actualizar(self):
         tiempo_actual = pg.time.get_ticks()
@@ -84,6 +85,7 @@ class Frutas(pg.sprite.Sprite):
         if self.comida:
             return        
         if pacman.rect.colliderect(self.rect):
+            self.sonido_fruta.play()
             pacman.sumar_puntos(self.puntos)
             pacman.frutas_comidas.append(self.tipo)
             sonido_fruta = pg.mixer.Sound("sonidos_pacman/eat_fruit.wav")
