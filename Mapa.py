@@ -1,6 +1,17 @@
 import pygame as pg
 from entidades import TILE_SIZE
 
+
+MAPA_ANCHO = 28 * TILE_SIZE
+MAPA_ALTO = 31 * TILE_SIZE
+
+
+HUD_ARRIBA = 75
+HUD_ABAJO = 45
+
+ANCHO = MAPA_ANCHO
+ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
+
 def Cargar_Mapa(Ruta: str) -> list:
     """Parametros:
                    Ruta -> es donde se encuntra el archivo de texto
@@ -9,6 +20,69 @@ def Cargar_Mapa(Ruta: str) -> list:
     with open (Ruta, "r") as Archivo:
        Mapa = Archivo.read().splitlines()
        return Mapa
+
+def menu_inicio(pantalla):
+
+    fuente_titulo = pg.font.SysFont("Courier", 70, bold=True)
+    fuente_menu = pg.font.SysFont("Courier", 35, bold=True)
+    menu = True
+    while menu:
+
+        for evento in pg.event.get():
+
+            if evento.type == pg.QUIT:
+                pg.quit()
+                exit()
+
+            if evento.type == pg.KEYDOWN:
+                if evento.key == pg.K_SPACE:
+                    menu = False
+
+                if evento.key == pg.K_ESCAPE:
+                    pg.quit()
+                    exit()
+
+
+        pantalla.fill((0,0,0))
+
+
+        titulo = fuente_titulo.render(
+            "PAC-MAN",
+            True,
+            (255,255,0)
+        )
+
+        jugar = fuente_menu.render(
+            "ESPACIO - JUGAR",
+            True,
+            (255,255,255)
+        )
+
+        salir = fuente_menu.render(
+            "ESC - SALIR",
+            True,
+            (255,255,255)
+        )
+
+
+        pantalla.blit(
+            titulo,
+            titulo.get_rect(center=(ANCHO//2, ALTO//3))
+        )
+
+        pantalla.blit(
+            jugar,
+            jugar.get_rect(center=(ANCHO//2, ALTO//2))
+        )
+
+        pantalla.blit(
+            salir,
+            salir.get_rect(center=(ANCHO//2, ALTO//2 + 60))
+        )
+
+
+        pg.display.flip()
+
 
 class pared (pg.sprite.Sprite):
     def __init__(self,x,y,tamaño):

@@ -2,7 +2,7 @@ import pygame as pg
 import HUD
 
 from entidades import PacMan
-from Mapa import Cargar_Mapa, Dibujar_Mapa
+from Mapa import Cargar_Mapa, Dibujar_Mapa , menu_inicio
 from Frutas import Frutas
 
 pg.init()
@@ -82,6 +82,7 @@ def cambiar_color_paredes(grupo_paredes, color):
 
 
 jugando = True
+menu_inicio(pantalla)
 
 while jugando:
     dt = reloj.tick(60) / 1000
