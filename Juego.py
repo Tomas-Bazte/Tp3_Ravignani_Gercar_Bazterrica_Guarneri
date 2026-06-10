@@ -66,8 +66,7 @@ Tiempo = 0
 Duracion_GO = 3000
 contando = False
 
-inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
-inicio.play()
+
 
 
 def cambiar_color_paredes(grupo_paredes, color):
