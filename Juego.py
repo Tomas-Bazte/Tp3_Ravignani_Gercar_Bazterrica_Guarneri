@@ -67,6 +67,7 @@ tiempo_inicio_estado = 0
 
 duracion_pausa_nivel = 1000
 duracion_flash_mapa = 3000
+duracion_ready_sin_sonido = 2000
 
 Tiempo = 0
 Duracion_GO = 3000
@@ -92,11 +93,23 @@ def iniciar_intermission_por_nivel(nivel_a_probar):
     intermission.iniciar_intermission()
 
 
+def iniciar_ready(con_sonido=False):
+    global canal_inicio, tiempo_inicio_estado
+
+    tiempo_inicio_estado = pg.time.get_ticks()
+
+    if con_sonido:
+        canal_inicio = sonido_inicio.play()
+    else:
+        canal_inicio = None
+
+    return "ready"
+
+
 jugando = True
 menu_inicio(pantalla)
 
-# El start.wav suena una sola vez, al empezar la partida.
-canal_inicio = sonido_inicio.play()
+estado_juego = iniciar_ready(con_sonido=True)
 
 while jugando:
     dt = reloj.tick(60) / 1000
@@ -145,8 +158,12 @@ while jugando:
 
     if estado_juego == "ready":
 
-        if canal_inicio is None or not canal_inicio.get_busy():
-            estado_juego = "jugando"
+        if canal_inicio is not None:
+            if not canal_inicio.get_busy():
+                estado_juego = "jugando"
+        else:
+            if pg.time.get_ticks() - tiempo_inicio_estado >= duracion_ready_sin_sonido:
+                estado_juego = "jugando"
 
     elif estado_juego == "jugando":
 
@@ -254,14 +271,14 @@ while jugando:
                 iniciar_intermission_por_nivel(nivel_intermission_actual)
                 estado_juego = "intermission"
             else:
-                estado_juego = "jugando"
+                estado_juego = iniciar_ready(con_sonido=False)
 
     elif estado_juego == "intermission":
 
         termino = intermission.actualizar_intermission()
 
         if termino:
-            estado_juego = "jugando"
+            estado_juego = iniciar_ready(con_sonido=False)
 
     elif estado_juego == "game_over":
 
