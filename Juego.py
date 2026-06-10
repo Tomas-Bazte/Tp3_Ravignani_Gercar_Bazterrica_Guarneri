@@ -174,7 +174,6 @@ while jugando:
 
             if pacman.vidas < 0:
                 estado_juego = "game_over"
-                tiempo_inicio_game_over = pg.time.get_ticks()
 
     elif estado_juego == "pausa_nivel":
 
@@ -211,8 +210,13 @@ while jugando:
             estado_juego = "jugando"
 
     elif estado_juego == "game_over":
-
-        if pg.time.get_ticks() - tiempo_inicio_game_over >= duracion_game_over:
+        Tiempo = pg.time.get_ticks()
+        pantalla.fill((0,0,0))
+        Fuente = pg.font.SysFont("Courier", 80, bold=True)
+        Texto = Fuente.render("GAME OVER", True, (255, 255, 255))
+        rect_Texto = Texto.get_rect(center=(ANCHO//2, ALTO//2))
+        pantalla.blit(Texto, rect_Texto)
+        if pg.time.get_ticks() - Tiempo >= Duracion_GO:
             jugando = False
 
     high_score = HUD.actualizar_high_score(
