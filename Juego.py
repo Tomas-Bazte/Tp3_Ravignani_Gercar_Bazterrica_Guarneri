@@ -63,7 +63,8 @@ duracion_pausa_nivel = 1000
 duracion_flash_mapa = 3000
 
 Tiempo = 0
-Duracion_GO = 2000
+Duracion_GO = 3000
+contando = False
 
 inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
 inicio.play()
@@ -177,7 +178,6 @@ while jugando:
 
             if pacman.vidas < 0:
                 estado_juego = "game_over"
-                tiempo_inicio_game_over = pg.time.get_ticks()
 
     elif estado_juego == "pausa_nivel":
 
@@ -215,7 +215,9 @@ while jugando:
             estado_juego = "jugando"
 
     elif estado_juego == "game_over":
-        Tiempo = pg.time.get_ticks()
+        if not contando:
+            Tiempo = pg.time.get_ticks()
+            contando = True
         pantalla.fill((0,0,0))
         Fuente = pg.font.SysFont("Courier", 80, bold=True)
         Texto = Fuente.render("GAME OVER", True, (255, 255, 255))
