@@ -33,7 +33,7 @@ def dibujar_hud_arriba(pantalla, pacman, fuente, high_score):
     pantalla.blit(texto_1up, (w*0.10, 5)) # Dibuja al texto_1up en la posicion (85,5)
     pantalla.blit(texto_score, (w*0.001, 32))
     pantalla.blit(texto_high, (w*0.55, 5))
-    pantalla.blit(texto_high_score, (w*0.55, 32))
+    pantalla.blit(texto_high_score, (w*0.60, 32))
 
 def dibujar_hud_abajo(pantalla, pacman):
     y = pantalla.get_height() - 22

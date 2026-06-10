@@ -4,12 +4,11 @@ import HUD
 from entidades import PacMan
 from Mapa import Cargar_Mapa, Dibujar_Mapa
 from Frutas import Frutas
+from entidades import TILE_SIZE
 
 pg.init()
 pg.mixer.init()
 pg.font.init()
-
-TILE_SIZE = 18
 
 MAPA_ANCHO = 28 * TILE_SIZE
 MAPA_ALTO = 31 * TILE_SIZE
@@ -19,6 +18,14 @@ HUD_ABAJO = 45
 
 ANCHO = MAPA_ANCHO
 ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
+
+GAME_OVER = False
+Texto = 0
+Duracion_GO= 3000
+
+Inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
+Cinematica = pg.mixer.Sound("sonidos_pacman/intermission.wav")
+Inicio.play()
 
 pantalla = pg.display.set_mode((ANCHO, ALTO))
 pg.display.set_caption("Pac-Man")
@@ -229,13 +236,6 @@ while jugando:
         high_score,
         fuente
     )
-
-    if estado_juego == "game_over":
-        pantalla.fill((0, 0, 0))
-        fuente_game_over = pg.font.SysFont("Courier", 80, bold=True)
-        texto = fuente_game_over.render("GAME OVER", True, (255, 255, 255))
-        rect_texto = texto.get_rect(center=(ANCHO // 2, ALTO // 2))
-        pantalla.blit(texto, rect_texto)
 
     pg.display.flip()
 

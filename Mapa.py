@@ -1,4 +1,5 @@
 import pygame as pg
+from entidades import TILE_SIZE
 
 def Cargar_Mapa(Ruta: str) -> list:
     """Parametros:
