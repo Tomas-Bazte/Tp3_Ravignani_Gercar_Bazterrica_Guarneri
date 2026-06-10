@@ -102,7 +102,7 @@ class PacMan (Criatura):
         if self.estado == "muriendo":
             if self.frame_muerte_actual < len(self.frames_muerte):
                 imagen = self.frames_muerte[self.frame_muerte_actual]
-                imagen = pg.transform.rotate(imagen, 270) # La animacion de la muerte es con la boca mirando para arriba
+                imagen = pg.transform.rotate(imagen,270)
                 rect = imagen.get_rect(center = centro)
                 pantalla.blit(imagen, rect)
             return
