@@ -1,28 +1,42 @@
 from entidades import Criatura
-import math
 import pygame as pg
 import random
 
+TILE_SIZE = 18
+
 class Fantasma(Criatura):
-    velocidad_normal = 0.75
-    velocidad_asustado = 0.50
-    velocidad_ojos = 1.50
-    def __init__(self, x, y, nombre, color, esquina_scatter,pos_Pc):
+    velocidad_normal = 2
+    velocidad_asustado = 1
+    velocidad_ojos = 3
+    
+    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc):
         super().__init__(x, y, Fantasma.velocidad_normal)
         self.nombre = nombre
         self.color = color
         self.esquina_scatter = esquina_scatter
         self.pos_Pc = pos_Pc
         self.estado = "scatter"  
-        self.direccion = "en_casa"
-        self.norma = x**2 + y**2
+        self.direccion = "derecha" 
+        self.rect = pg.Rect(x, y, TILE_SIZE, TILE_SIZE)
 
-    def calcular_Dist(self,tile=24):
-        origen = pg.math.Vector2((self.x,self.y))
-        destino = pg.math.Vector2 (self.pos_Pc)
-        diff = origen - destino
-        Dist = math.sqrt((diff.magnitude_squared()))
-        return Dist
+    def analizar_colisiones(self):
+        hitbox_fantasma = self.rect.copy()
+        if self.direccion == 'derecha':
+            hitbox_fantasma.x += self.velocidad
+        elif self.direccion == 'izquierda':
+            hitbox_fantasma.x -= self.velocidad
+        elif self.direccion == 'arriba':
+            hitbox_fantasma.y -= self.velocidad
+        elif self.direccion == 'abajo':
+            hitbox_fantasma.y += self.velocidad
+        return bool(hitbox_fantasma.collideobjects(self.grupo_Paredes))
+    
+    def analizar_movimientos(self, choca):
+        if choca or (self.x % TILE_SIZE == 0 and self.y % TILE_SIZE == 0):
+            if self.estado == 'asustado':
+                self.direccion = self.asustado()
+            else:
+                self.direccion = self.definir_estado()
 
     def definir_estado(self):
         if self.estado == 'scatter':
@@ -31,64 +45,70 @@ class Fantasma(Criatura):
         elif self.estado == 'chase':
             objx, objy = self.pos_Pc
             self.velocidad = self.velocidad_normal
-        elif self.estado == 'asustado':
-            objx, objy = self.pos_Pc
-        if abs(objx - self.x) == abs(objy - self.y): # Si la distancia al objetivo es la misma en eje x e y
-            eleccion = random.choice(['x','y'])
-            if eleccion == 'x':
-                if self.x > objx:
-                    self.direccion = 'izquierda'
-                elif self.x < objx:
-                    self.direccion = 'derecha'
-            elif eleccion == 'y':
-                if self.y > objy:
-                    self.direccion = 'arriba'
-                elif self.y < objy:
-                    self.direccion = 'abajo'
-        elif abs(objx - self.x) > abs(objy - self.y): # Si la distancia en el eje x es mayor se mueve en x
+        direccion = self.direccion
+        if abs(objx - self.x) > abs(objy - self.y): 
             if self.x > objx:
-                self.direccion = 'izquierda'
+                direccion = 'izquierda' 
             elif self.x < objx:
-                self.direccion = 'derecha'
-        elif abs(objy - self.y) > abs(objx - self.x): #Si la distancia en el eje y es mayor entonces se mueve en el eje y 
-            if self.y > objy:
-                self.direccion = 'arriba'
+                direccion ='derecha'
+        elif abs(objy - self.y) > abs(objx - self.x): 
+            if self.y > objy: 
+                direccion = 'arriba' 
             elif self.y < objy:
-                self.direccion = 'abajo'
+                direccion ='abajo'
+        if self.analizar_colisiones(): 
+            opciones = ['derecha', 'izquierda', 'arriba', 'abajo']
+            if direccion in opciones: 
+                opciones.remove(direccion)
+            for o in opciones:
+                self.direccion = o
+                if not self.analizar_colisiones():
+                    break
         return self.direccion
 
     def asustado(self):
         self.estado = 'asustado'
         self.velocidad = self.velocidad_asustado
-        direccion = self.definir_estado()
-        if direccion == 'derecha':
-            self.ndir = 'izquierda'
-        elif direccion == 'izquierda':
-            self.ndir = 'derecha'
-        elif direccion == 'arriba':
-            self.ndir = 'abajo'
-        else:
-            self.ndir = 'arriba'
-        return self.ndir
+        opciones = ['derecha', 'izquierda', 'arriba', 'abajo']
+        self.direccion = random.choice(opciones)
+        for o in opciones:
+            self.direccion = o
+            if not self.analizar_colisiones():
+                return o
+        return self.direccion
 
     def ejecutar_movimientos(self):
-        if self.estado == 'scatter' or self.estado == 'chase':
-            direccion = self.definir_estado()
-        elif self.estado == 'asustado':
-            direccion = self.asustado()
-        if direccion == 'derecha':
-             self.x += self.velocidad
-        elif direccion == 'izquierda':
-             self.x -= self.velocidad
-        elif direccion == 'arriba':
-             self.y -= self.velocidad
-        else:
-             self.y += self.velocidad
+        choca = self.analizar_colisiones()
+        self.analizar_movimientos(choca)
+        if self.analizar_colisiones():
+            return self.x, self.y
+        if self.direccion == 'derecha':
+            self.x += self.velocidad
+        elif self.direccion == 'izquierda': 
+            self.x -= self.velocidad
+        elif self.direccion == 'arriba':
+            self.y -= self.velocidad
+        elif self.direccion == 'abajo':
+            self.y += self.velocidad
+        self.rect.x = self.x
+        self.rect.y = self.y        
+        return self.x, self.y
+    
+class Clyde(Fantasma):
+    def __init__(self, x, y, pos_Pc):
+        super().__init__(x, y, 'Clyde', 'naranja', (0, 0), pos_Pc)
 
-class Clyde (Fantasma):
-    def __init__(self, x, y, nombre, color, esquina_scatter):
-        super().__init__(x, y, "Clyde", (255,165,0), esquina_scatter, self.pos_Pc)
-        self.nombre = "Clyde"
-        self.color = "Naranja"
-        self.esquina_scatter = esquina_scatter
-        self.Dist = self.calcular_Dist(self)
+
+class Blinky(Fantasma):
+    def __init__(self, x, y, pos_Pc):
+        super().__init__(x, y, 'Blinky', 'rojo', (0, 0), pos_Pc)
+
+
+class Pinky(Fantasma):
+    def __init__(self, x, y, pos_Pc):
+        super().__init__(x, y, 'Pinky', 'rosa', (0, 0), pos_Pc)
+
+
+class Inky(Fantasma):
+    def __init__(self, x, y, pos_Pc):
+        super().__init__(x, y, 'Inky', 'celeste', (0, 0), pos_Pc)
