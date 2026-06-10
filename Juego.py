@@ -115,7 +115,7 @@ while jugando:
 
     if estado_juego == "jugando":
 
-        if len(grupo_puntos) == 0:
+        if not grupo_puntos:
             estado_juego = "pausa_nivel"
             tiempo_inicio_estado = pg.time.get_ticks()
 
@@ -236,55 +236,33 @@ while jugando:
     # DIBUJAR
     # ---------------------
 
-    pantalla.fill((0, 0, 0))
-    mapa_surface.fill((0, 0, 0))
-
-    grupo_paredes.draw(mapa_surface)
-
-    if estado_juego != "flash_mapa":
-        grupo_puntos.draw(mapa_surface)
-        grupo_frutas.draw(mapa_surface)
-        Puertas.draw(mapa_surface)
-
-    pacman.dibujar(mapa_surface)
-
-    pantalla.blit(
-        mapa_surface,
-        (0, HUD_ARRIBA)
-    )
-
-    HUD.dibujar_hud(
-        pantalla,
-        pacman,
-        high_score,
-        fuente
-    )
-
-    if estado_juego == "game_over":
-
+    if estado_juego == "jugando":
         pantalla.fill((0, 0, 0))
+        mapa_surface.fill((0, 0, 0))
 
-        fuente_game_over = pg.font.SysFont(
-            "Courier",
-            80,
-            bold=True
-        )
+        grupo_paredes.draw(mapa_surface)
 
-        texto = fuente_game_over.render(
-            "GAME OVER",
-            True,
-            (255, 255, 255)
-        )
+        if estado_juego != "flash_mapa":
+            grupo_puntos.draw(mapa_surface)
+            grupo_frutas.draw(mapa_surface)
+            Puertas.draw(mapa_surface)
 
-        rect_texto = texto.get_rect(
-            center=(ANCHO // 2, ALTO // 2)
-        )
+        pacman.dibujar(mapa_surface)
 
         pantalla.blit(
-            texto,
-            rect_texto
+            mapa_surface,
+            (0, HUD_ARRIBA)
+        )
+
+        HUD.dibujar_hud(
+            pantalla,
+            pacman,
+            high_score,
+            fuente
         )
 
     pg.display.flip()
+
+
 
 pg.quit()
