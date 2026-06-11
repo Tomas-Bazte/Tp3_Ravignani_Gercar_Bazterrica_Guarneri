@@ -5,7 +5,6 @@ from entidades import TILE_SIZE
 MAPA_ANCHO = 28 * TILE_SIZE
 MAPA_ALTO = 31 * TILE_SIZE
 
-
 HUD_ARRIBA = 75
 HUD_ABAJO = 45
 
@@ -20,69 +19,6 @@ def Cargar_Mapa(Ruta: str) -> list:
     with open (Ruta, "r") as Archivo:
        Mapa = Archivo.read().splitlines()
        return Mapa
-
-def menu_inicio(pantalla):
-
-    fuente_titulo = pg.font.SysFont("Courier", 70, bold=True)
-    fuente_menu = pg.font.SysFont("Courier", 35, bold=True)
-    menu = True
-    menues = {"principal":["JUGAR","Opciones", "SALIR"], 
-            "configuracion" : ["Cantidad de fantasmas","Cantidad de vidas","Volver"]
-            ,"Cantidad de fantasmas":["1","2","3","4","5","6","Volver"]
-    }
-    seleccion = 0
-    estado_actual = "principal"
-    historial = []
-    while menu:
-        for evento in pg.event.get():
-            if evento.type == pg.QUIT:
-                pg.quit()
-                exit()
-            if evento.type == pg.KEYDOWN:
-                lista_actual= menues[estado_actual]
-                if evento.key == pg.K_UP or evento.key == pg.K_w:
-                    seleccion = (seleccion - 1) % len(lista_actual)
-                elif evento.key == pg.K_DOWN or evento.key == pg.K_s:
-                    seleccion = (seleccion + 1) % len(lista_actual)
-                    
-                elif evento.key == pg.K_RETURN:
-                    opcion_elegida = lista_actual[seleccion]
-                    if opcion_elegida == "Volver":
-                        if historial:
-                            estado_actual = historial.pop()
-                            seleccion = 0
-                            continue
-                    if estado_actual == "principal":
-                        if opcion_elegida == "JUGAR":
-                            return 
-                        elif opcion_elegida == "SALIR":
-                            pg.quit()
-                            exit()
-                        elif opcion_elegida == "Opciones":
-                            historial.append(estado_actual)
-                            estado_actual = "configuracion"
-                            seleccion = 0
-                            
-                    elif estado_actual == "configuracion":
-                        if opcion_elegida == "Cantidad de fantasmas":
-                            historial.append(estado_actual)
-                            estado_actual = "Cantidad de fantasmas"
-                            seleccion = 0
-
-        
-        pantalla.fill((0,0,0))
-        titulo = fuente_titulo.render("PAC-MAN",True,(255,255,0))
-        rect_t = titulo.get_rect(center=((ANCHO//2), (ALTO//2)-100))
-        pantalla.blit(titulo,rect_t)
-
-        for i, opcion in enumerate(menues [estado_actual]):
-            color = (255, 255, 0) if i == seleccion else (255, 255, 255)
-            texto = fuente_menu.render(opcion, True, color)
-            rect = texto.get_rect(center=(ANCHO//2, (ALTO//2) + (i * 50)))
-            pantalla.blit(texto, rect)
-        pg.display.flip()
-
-
 
 class pared (pg.sprite.Sprite):
     def __init__(self,x,y,tamaño):

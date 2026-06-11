@@ -1,25 +1,16 @@
 import pygame as pg
 import HUD
-
 from entidades import PacMan
-from Mapa import Cargar_Mapa, Dibujar_Mapa, menu_inicio, dibujar_ready, dibujar_game_over
+from Mapa import Cargar_Mapa, Dibujar_Mapa, dibujar_ready, dibujar_game_over , MAPA_ALTO , MAPA_ANCHO , ANCHO , ALTO , HUD_ABAJO ,HUD_ARRIBA
 from Frutas import Frutas
 from Intermissions import Intermission
+from entidades import TILE_SIZE
+from Menu import menu_inicio
 
 pg.init()
 pg.mixer.init()
 pg.font.init()
 
-TILE_SIZE = 18
-
-MAPA_ANCHO = 28 * TILE_SIZE
-MAPA_ALTO = 31 * TILE_SIZE
-
-HUD_ARRIBA = 75
-HUD_ABAJO = 45
-
-ANCHO = MAPA_ANCHO
-ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
 
 pantalla = pg.display.set_mode((ANCHO, ALTO))
 pg.display.set_caption("Test Pac-Man")
