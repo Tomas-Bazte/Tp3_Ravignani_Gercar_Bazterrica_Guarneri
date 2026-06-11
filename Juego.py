@@ -98,7 +98,7 @@ def iniciar_ready(con_sonido=False):
 
 
 jugando = True
-menu_inicio(pantalla)
+Fantasmas , Esquinas = menu_inicio(pantalla)
 
 estado_juego = iniciar_ready(con_sonido=True)
 

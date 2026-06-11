@@ -22,7 +22,7 @@ FANTASMAS = [
     {"id": 2, "nombre": "Pinky", "color": ROSA, "desc": "- El emboscador."},
     {"id": 3, "nombre": "Inky", "color": CELESTE, "desc": "- El flanqueador."},
     {"id": 4, "nombre": "Clyde", "color": NARANJA, "desc": "- El tímido."},
-    {"id": 5, "nombre": "#Aca va el nombre", "color": GRIS_O, "desc": "- La sombra"},
+    {"id": 5, "nombre": "Tracer", "color": GRIS_O, "desc": "- La sombra"},
     {"id": 6, "nombre": "Spark", "color": AMARILLO, "desc": "- El doble cara"}
 ]
 
@@ -36,6 +36,9 @@ def menu_inicio(pantalla):
     Esquinas = {}
     Esquinas_actual = 0
     estado_actual = "Inicio"
+    esquinas = {1:"Superior Izquierda",2:"Superior Derecha",3:"Inferior Izquierda",4:"Inferior Derecha"}
+    
+
     while menu:
         for evento in pg.event.get():
             if evento.type == pg.QUIT:
@@ -60,10 +63,13 @@ def menu_inicio(pantalla):
                     if pg.K_1 <= evento.key <= pg.K_4:
                         Esquinas_Elegida = evento.key - pg.K_1 + 1
                         Fantama = seleccionados[Esquinas_actual]
-                        Esquinas[Fantama] = Esquinas_Elegida
-                        Esquinas_actual += 1
-                        if estado_actual >= 4:
-                            return Esquinas , seleccionados
+                        if Esquinas_Elegida in esquinas:
+                            Esquinas_Elegida = esquinas.pop(Esquinas_Elegida)
+                            Esquinas[Fantama] = Esquinas_Elegida
+                            Esquinas_actual += 1
+
+                        if Esquinas_actual >= 4:
+                            return seleccionados , Esquinas
             
 
         pantalla.fill(NEGRO)
@@ -102,13 +108,17 @@ def menu_inicio(pantalla):
                 pantalla.blit(descrip, (x_centro - 50, y_actual +2))
 
         elif estado_actual == "asignacion":
-            for fantasma in seleccionados:
-                titulo = fuente_normal.render(f"Elija la esquina para {fantasma["nombre"]}:",False,BLANCO)
-                pantalla.blit (titulo,titulo.get_rect(center=(ANCHO//2,60)))
-                
-
-
-
-
+            id_actual = seleccionados[Esquinas_actual]
+            for f in FANTASMAS:
+                if f["id"] == id_actual:
+                    fantasma_actual = f
+                    Texto = fuente_normal.render(f"Asignar esquina a {fantasma_actual["nombre"]} {Esquinas_actual+1}/4",True,BLANCO)
+                    pantalla.blit(Texto,Texto.get_rect(center=(ANCHO//2, 80)))
+                yor = 200
+                for numero, esquina in esquinas.items():
+                    Texto = fuente_normal.render(f"{numero} {esquina}",False,GRIS)
+                    pantalla.blit(Texto,Texto.get_rect(center=(ANCHO//2-100,yor + (numero*60))))
+                info = fuente_chica.render("Presiona 1-4 para asignar esquinas respectivamente",False,BLANCO)
+                pantalla.blit(info,info.get_rect(center=(ANCHO//2,ALTO-30)))
 
         pg.display.flip()
