@@ -117,7 +117,8 @@ def menu_inicio(pantalla):
                 yor = 200
                 for numero, esquina in esquinas.items():
                     Texto = fuente_normal.render(f"{numero} {esquina}",False,GRIS)
-                    pantalla.blit(Texto,Texto.get_rect(center=(ANCHO//2-100,yor + (numero*60))))
+                    y_fija = yor + ((numero - 1) * 60)
+                    pantalla.blit(Texto,Texto.get_rect(topleft=(ANCHO//2-200,y_fija)))
                 info = fuente_chica.render("Presiona 1-4 para asignar esquinas respectivamente",False,BLANCO)
                 pantalla.blit(info,info.get_rect(center=(ANCHO//2,ALTO-30)))
 
