@@ -56,7 +56,7 @@ class Frutas(pg.sprite.Sprite):
         self.tipo = self.obtener_tipo(nivel)
         self.puntos = Frutas_dic[self.tipo]["puntos"]
         self.tamaño_fruta = int(tile_size * 0.85)
-        self.image = pg.image.load(f"fruits/{Frutas_dic[self.tipo]["imagen"]}").convert_alpha()
+        self.image = pg.image.load(f"fruits/{Frutas_dic[self.tipo]['imagen']}").convert_alpha()
         self.image = pg.transform.scale(self.image, (self.tamaño_fruta, self.tamaño_fruta)) # Para que este a escala.
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
