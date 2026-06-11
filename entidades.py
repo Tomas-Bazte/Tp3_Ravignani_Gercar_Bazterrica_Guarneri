@@ -61,7 +61,7 @@ class PacMan (Criatura):
         self.image = pg.Surface((self.radio*2,self.radio*2),pg.SRCALPHA)
         self.rect = pg.Rect(0,0,TILE_SIZE,TILE_SIZE) 
         self.rect.center= (x,y)
-        self.vidas = 3
+        self.vidas = 2 # La que ya tiene + 2 mas = 3
         self.puntaje = 0
         self.estado = "normal" # normal, muriendo
         self.frame_animacion = 0 # frame_animacion = 0 - boca casi cerrada, frame_animacion = 5  - boca media abierta, frame_animacion = 10 - boca muy abierta
@@ -83,6 +83,7 @@ class PacMan (Criatura):
         self.sonido_fright = pg.mixer.Sound("sonidos_pacman/fright.wav")
         self.alternar_sonido_dot = 0
         self.nivel_completado = 0
+        self.frutas_comidas = []
         
     def cambiar_direccion(self, tecla):
         if tecla == pg.K_RIGHT or tecla == pg.K_d:
@@ -102,7 +103,7 @@ class PacMan (Criatura):
         if self.estado == "muriendo":
             if self.frame_muerte_actual < len(self.frames_muerte):
                 imagen = self.frames_muerte[self.frame_muerte_actual]
-                imagen = pg.transform.rotate(imagen, 270) # La animacion de la muerte es con la boca mirando para arriba
+                imagen = pg.transform.rotate(imagen,270)
                 rect = imagen.get_rect(center = centro)
                 pantalla.blit(imagen, rect)
             return

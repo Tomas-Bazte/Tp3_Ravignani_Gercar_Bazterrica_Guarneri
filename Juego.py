@@ -2,8 +2,9 @@ import pygame as pg
 import HUD
 
 from entidades import PacMan
-from Mapa import Cargar_Mapa, Dibujar_Mapa , menu_inicio
+from Mapa import Cargar_Mapa, Dibujar_Mapa, menu_inicio, dibujar_ready, dibujar_game_over
 from Frutas import Frutas
+from Intermissions import Intermission
 
 pg.init()
 pg.mixer.init()
@@ -22,6 +23,8 @@ ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
 
 pantalla = pg.display.set_mode((ANCHO, ALTO))
 pg.display.set_caption("Test Pac-Man")
+
+HUD.cargar_frutas_hud()
 
 mapa_surface = pg.Surface((MAPA_ANCHO, MAPA_ALTO))
 
@@ -47,6 +50,9 @@ high_score = HUD.cargar_high_score()
 
 grupo_frutas = pg.sprite.Group()
 
+intermission = Intermission()
+nivel_intermission_actual = 3
+
 nivel = 1
 contador_puntos_comidos = 0
 frutas_aparecidas = 0
@@ -56,17 +62,19 @@ POS_FRUTA = (
     17 * TILE_SIZE + TILE_SIZE // 2
 )
 
-estado_juego = "jugando"
+estado_juego = "ready"
 tiempo_inicio_estado = 0
 
 duracion_pausa_nivel = 1000
 duracion_flash_mapa = 3000
+duracion_ready_sin_sonido = 2000
 
 Tiempo = 0
 Duracion_GO = 3000
 contando = False
 
-
+sonido_inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
+canal_inicio = None
 
 
 def cambiar_color_paredes(grupo_paredes, color):
@@ -80,8 +88,28 @@ def cambiar_color_paredes(grupo_paredes, color):
         )
 
 
+def iniciar_intermission_por_nivel(nivel_a_probar):
+    intermission.cargar_frames_intermission_1(nivel_a_probar)
+    intermission.iniciar_intermission()
+
+
+def iniciar_ready(con_sonido=False):
+    global canal_inicio, tiempo_inicio_estado
+
+    tiempo_inicio_estado = pg.time.get_ticks()
+
+    if con_sonido:
+        canal_inicio = sonido_inicio.play()
+    else:
+        canal_inicio = None
+
+    return "ready"
+
+
 jugando = True
 menu_inicio(pantalla)
+
+estado_juego = iniciar_ready(con_sonido=True)
 
 while jugando:
     dt = reloj.tick(60) / 1000
@@ -91,7 +119,23 @@ while jugando:
             jugando = False
 
         if evento.type == pg.KEYDOWN:
-            if estado_juego == "jugando":
+
+            if evento.key == pg.K_i:
+                nivel_intermission_actual = 3
+                iniciar_intermission_por_nivel(nivel_intermission_actual)
+                estado_juego = "intermission"
+
+            elif evento.key == pg.K_o:
+                nivel_intermission_actual = 6
+                iniciar_intermission_por_nivel(nivel_intermission_actual)
+                estado_juego = "intermission"
+
+            elif evento.key == pg.K_p:
+                nivel_intermission_actual = 10
+                iniciar_intermission_por_nivel(nivel_intermission_actual)
+                estado_juego = "intermission"
+
+            elif estado_juego == "jugando":
 
                 if evento.key == pg.K_m and pacman.estado != "muriendo":
                     pacman.iniciar_muerte()
@@ -112,9 +156,18 @@ while jugando:
     # UPDATE
     # ---------------------
 
-    if estado_juego == "jugando":
+    if estado_juego == "ready":
 
-        if not grupo_puntos:
+        if canal_inicio is not None:
+            if not canal_inicio.get_busy():
+                estado_juego = "jugando"
+        else:
+            if pg.time.get_ticks() - tiempo_inicio_estado >= duracion_ready_sin_sonido:
+                estado_juego = "jugando"
+
+    elif estado_juego == "jugando":
+
+        if len(grupo_puntos) == 0:
             estado_juego = "pausa_nivel"
             tiempo_inicio_estado = pg.time.get_ticks()
 
@@ -212,17 +265,27 @@ while jugando:
             )
 
             pacman.nivel_completado = False
-            estado_juego = "jugando"
+
+            if nivel in [3, 6, 10, 14, 18]:
+                nivel_intermission_actual = nivel
+                iniciar_intermission_por_nivel(nivel_intermission_actual)
+                estado_juego = "intermission"
+            else:
+                estado_juego = iniciar_ready(con_sonido=False)
+
+    elif estado_juego == "intermission":
+
+        termino = intermission.actualizar_intermission()
+
+        if termino:
+            estado_juego = iniciar_ready(con_sonido=False)
 
     elif estado_juego == "game_over":
+
         if not contando:
             Tiempo = pg.time.get_ticks()
             contando = True
-        pantalla.fill((0,0,0))
-        Fuente = pg.font.SysFont("Courier", 80, bold=True)
-        Texto = Fuente.render("GAME OVER", True, (255, 255, 255))
-        rect_Texto = Texto.get_rect(center=(ANCHO//2, ALTO//2))
-        pantalla.blit(Texto, rect_Texto)
+
         if pg.time.get_ticks() - Tiempo >= Duracion_GO:
             jugando = False
 
@@ -235,33 +298,47 @@ while jugando:
     # DIBUJAR
     # ---------------------
 
-    if estado_juego == "jugando":
+    if estado_juego == "intermission":
         pantalla.fill((0, 0, 0))
-        mapa_surface.fill((0, 0, 0))
 
-        grupo_paredes.draw(mapa_surface)
-
-        if estado_juego != "flash_mapa":
-            grupo_puntos.draw(mapa_surface)
-            grupo_frutas.draw(mapa_surface)
-            Puertas.draw(mapa_surface)
-
-        pacman.dibujar(mapa_surface)
-
-        pantalla.blit(
-            mapa_surface,
-            (0, HUD_ARRIBA)
-        )
-
-        HUD.dibujar_hud(
+        intermission.dibujar_intermission(
             pantalla,
-            pacman,
-            high_score,
-            fuente
+            nivel_intermission_actual
         )
+
+        pg.display.flip()
+        continue
+
+    pantalla.fill((0, 0, 0))
+    mapa_surface.fill((0, 0, 0))
+
+    grupo_paredes.draw(mapa_surface)
+
+    if estado_juego != "flash_mapa":
+        grupo_puntos.draw(mapa_surface)
+        grupo_frutas.draw(mapa_surface)
+        Puertas.draw(mapa_surface)
+
+    pacman.dibujar(mapa_surface)
+
+    if estado_juego == "ready":
+        dibujar_ready(mapa_surface)
+
+    elif estado_juego == "game_over":
+        dibujar_game_over(mapa_surface)
+
+    pantalla.blit(
+        mapa_surface,
+        (0, HUD_ARRIBA)
+    )
+
+    HUD.dibujar_hud(
+        pantalla,
+        pacman,
+        high_score,
+        fuente
+    )
 
     pg.display.flip()
-
-
 
 pg.quit()
