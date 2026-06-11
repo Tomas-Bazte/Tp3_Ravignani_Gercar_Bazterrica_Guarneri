@@ -26,64 +26,38 @@ def menu_inicio(pantalla):
     fuente_titulo = pg.font.SysFont("Courier", 70, bold=True)
     fuente_menu = pg.font.SysFont("Courier", 35, bold=True)
     menu = True
+    opciones = ["JUGAR","Opciones", "SALIR"]
+    seleccion = 0
     while menu:
-
         for evento in pg.event.get():
-
             if evento.type == pg.QUIT:
                 pg.quit()
                 exit()
-
+                
             if evento.type == pg.KEYDOWN:
-                if evento.key == pg.K_SPACE:
-                    inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
-                    inicio.play()
-                    menu = False
-
-                if evento.key == pg.K_ESCAPE:
-                    pg.quit()
-                    exit()
-
-
+                if evento.key == pg.K_UP or evento.key == pg.K_w:
+                    seleccion = (seleccion - 1) % len(opciones)
+                elif evento.key == pg.K_DOWN or evento.key == pg.K_s:
+                    seleccion = (seleccion + 1) % len(opciones)
+                    
+                elif evento.key == pg.K_RETURN:
+                    if opciones[seleccion] == "JUGAR":
+                        return 
+                    elif opciones[seleccion] == "SALIR":
+                        pg.quit()
+                        exit()
         pantalla.fill((0,0,0))
+        for i, opcion in enumerate(opciones):
+            color = (255, 255, 0) if i == seleccion else (255, 255, 255)
+            texto = fuente_menu.render(opcion, True, color)
+            rect = texto.get_rect(center=(ANCHO//2, (ALTO//2) + (i * 50)))
+            pantalla.blit(texto, rect)
 
-
-        titulo = fuente_titulo.render(
-            "PAC-MAN",
-            True,
-            (255,255,0)
-        )
-
-        jugar = fuente_menu.render(
-            "ESPACIO - JUGAR",
-            True,
-            (255,255,255)
-        )
-
-        salir = fuente_menu.render(
-            "ESC - SALIR",
-            True,
-            (255,255,255)
-        )
-
-
-        pantalla.blit(
-            titulo,
-            titulo.get_rect(center=(ANCHO//2, ALTO//3))
-        )
-
-        pantalla.blit(
-            jugar,
-            jugar.get_rect(center=(ANCHO//2, ALTO//2))
-        )
-
-        pantalla.blit(
-            salir,
-            salir.get_rect(center=(ANCHO//2, ALTO//2 + 60))
-        )
-
-
+        titulo = fuente_titulo.render("PAC-MAN",True,(255,255,0))
+        rect_t = titulo.get_rect(center=((ANCHO//2)-200, (ALTO//2)-200))
+        pantalla.blit(titulo,rect_t)
         pg.display.flip()
+
 
 
 class pared (pg.sprite.Sprite):
