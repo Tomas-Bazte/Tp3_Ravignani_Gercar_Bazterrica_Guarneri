@@ -297,6 +297,12 @@ while jugando:
             nivel_intermission_actual
         )
 
+        # Solo frutas comidas
+        HUD.dibujar_frutas_hud(
+            pantalla,
+            pacman
+        )
+
         pg.display.flip()
         continue
 
