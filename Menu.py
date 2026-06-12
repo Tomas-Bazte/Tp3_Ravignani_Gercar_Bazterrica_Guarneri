@@ -78,7 +78,7 @@ def menu_inicio(pantalla):
             texto_puntaje = fuente_normal.render("High Score: ",True,GRIS)
             cantidad = fuente_chica.render(High,True,AMARILLO)
             pantalla.blit(texto_puntaje,texto_puntaje.get_rect(center= ((ANCHO//2),ALTO//2+200)))
-            pantalla.blit(cantidad,cantidad.get_rect(center=(ANCHO//2,ALTO//2+250)))
+            pantalla.blit(cantidad,cantidad.get_rect(center=(ANCHO//2,ALTO//2+230)))
             titulo = fuente_titulo.render("PAC-MAN", True, AMARILLO)
             pantalla.blit(titulo, titulo.get_rect(center=(ANCHO//2, ALTO//2 - 50)))
 
