@@ -3,7 +3,7 @@ import math
 TILE_SIZE = 18
 
 class Criatura(pg.sprite.Sprite):
-    def __init__(self,x,y,velocidad):
+    def __init__(self, x: float ,y : float ,velocidad : float)->None :
         self.x = x
         self.y = y
         self.velocidad = velocidad # tiles/segundo
@@ -12,7 +12,15 @@ class Criatura(pg.sprite.Sprite):
         self.radio = (TILE_SIZE/2)-2 # Radio de pixeles por default, tomando en cuenta el size del tile como 18x18 pixeles
 
     
-    def mover(self, dt, tile_size=18,velocidad = 10):  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
+    def mover(self, dt: float, tile_size=18,velocidad = 10) -> None:  # dt = tiempo transcurrido desde el ultimo frame (en segundos). Permite usar tiles/segundos
+        """Mueve la criatura segun su direcion actual
+        Argumentos: 
+            dt: tiempo transcurido desde el ultima frame, medido en segundos
+            title_size: tamaño de cada title del mapa medido en pixeles
+            velocidad: velocidad medida en titles por segundo
+        Retorna: 
+            None
+            """
         desplazamiento = velocidad * tile_size * dt
         if self.direccion == "derecha":
             self.x += desplazamiento
@@ -23,7 +31,19 @@ class Criatura(pg.sprite.Sprite):
         elif self.direccion == "abajo":
             self.y += desplazamiento
     
-    def Choque (self,dt,tile_size=18,paredes=None,puertas=None):
+    def Choque (self, dt : float, tile_size=18 ,paredes=None ,puertas=None)->None:
+        """
+        Mueve a la criatura verificando coliciones contra paredes y puertas
+        intenta mover a la cratura a la proxima direccion si esta genera una colision vuelve a la direcion anterior
+        luego mueve en la direcion actual en el caso de que choque retaura la posicion previa
+        Argumentos:
+            dt: tiempo transcurido desde el ultima frame, medido en segundos
+            title_size: tamaño de cada title del mapa medido en pixeles
+            paredes: grupo de sprites que representa las paredes del mapa
+            puertas: grupo de sprites que representan puertas del mapa
+        Retorna:
+            None
+              """
         if self.prox != self.direccion and self.prox != "quieto":
             direccion_ant = self.direccion
             self.direccion = self.prox
@@ -50,6 +70,10 @@ class Criatura(pg.sprite.Sprite):
 
 
     def obtener_hitbox(self):
+        """
+        Devuelve la hitbox de la criatura
+        Retorna:
+            self.rect: hitbox actual de la criatura"""
         return self.rect
          
 class PacMan (Criatura):
@@ -85,7 +109,13 @@ class PacMan (Criatura):
         self.nivel_completado = 0
         self.frutas_comidas = []
         
-    def cambiar_direccion(self, tecla):
+    def cambiar_direccion(self, tecla : int)->None:
+        """
+        Guarda la proxima direcion segun la tecla precionada
+        Argumentos: 
+            Tecla: int con la direcion de movimineto (w, a, s d)
+        Retorna:
+            None"""
         if tecla == pg.K_RIGHT or tecla == pg.K_d:
             self.prox = "derecha"
         elif tecla == pg.K_LEFT or tecla == pg.K_a:
@@ -95,7 +125,13 @@ class PacMan (Criatura):
         elif tecla == pg.K_DOWN or tecla == pg.K_s:
             self.prox = "abajo"
             
-    def dibujar(self,pantalla):
+    def dibujar(self, pantalla)-> None:
+        """
+        Dibuja a Pacman en la pantalla dependindo el estado en el que se encuantra
+        Argumentos: 
+            Pantalla: superficie donde se dibuja a Pacman
+        Retorna:
+            None"""
         centro = (int(self.x), int(self.y))
         if self.nivel_completado:
             pg.draw.circle(pantalla,(255,255,0),(int(self.x), int(self.y)),self.radio)
@@ -121,6 +157,10 @@ class PacMan (Criatura):
         pg.draw.polygon(pantalla, (0, 0, 0), boca)
     
     def actualizar_animacion(self):
+        """
+        Actualiza el frame de animacion de la boca de pacman mientras esta en movimiento
+        Retorna:
+            None"""
         if self.direccion == "quieto":
             return
         if self.nivel_completado:
@@ -137,50 +177,86 @@ class PacMan (Criatura):
                 self.frame_animacion = self.frame_min_boca
                 self.boca_abriendo = True
     
-    def sumar_puntos(self,puntos):
+    def sumar_puntos(self, puntos :int)-> None:
+        """Suma puntos al puntaje de pacman y otorga vida extra en el caso de llegar a los 10.000 puntos
+        Argumentos:
+           puntos: cantidad de puntos sumados
+        Retorna: 
+           None"""
         self.puntaje += puntos
         if self.puntaje >= 10000 and not self.vida_extra_dada:
             self.vidas += 1
             self.vida_extra_dada = True
     
-    def perder_vida(self):
+    def perder_vida(self)->None:
+        """le resta vidas a pacman
+         Retorna:
+             None """
         if self.vidas >= 0:
             self.vidas -= 1
         self.direccion = "quieto"
 
-    def esta_vivo(self): # Para saber si murió PacMan
+    def esta_vivo(self)-> bool: # Para saber si murió PacMan
+        """Indica si pacman tiene vidas
+        Retorna:
+        True: si pacman tiene vidas
+        False: si pacman esta muerto"""
         return self.vidas > 0
 
-    def activar_super(self):
+    def activar_super(self)->None:
+        """Activa el modo super de pacman
+        Retorna:
+            None"""
         self.modo_super = True
         self.tiempo_super_inicio = pg.time.get_ticks()
         self.velocidad = PacMan.velocidad_super
         self.sonido_fright.stop()
         self.sonido_fright.play(loops=-1)
     
-    def desactivar_super(self):
+    def desactivar_super(self)->None:
+        """Desactiva el modo super de pacman 
+        Retorna: 
+            None"""
         self.modo_super = False
         self.velocidad = PacMan.velocidad_normal
         self.sonido_fright.stop()
     
-    def actualizar_super(self):
+    def actualizar_super(self)->None:
+        """Mide el tiempo que de super de pacman y en el caso de alcanzar los 6 segundos desactiva la super
+        Retorna:
+            None"""
         if self.modo_super:
             tiempo_actual = pg.time.get_ticks()
             
             if tiempo_actual - self.tiempo_super_inicio >= self.duracion_super:
                 self.desactivar_super()
                 
-    def reiniciar_posicion(self, x, y): # Volver a posición inicial
+    def reiniciar_posicion(self, x: float, y:float)-> None: # Volver a posición inicial
+        """devuelve a pacman a su pocision original
+        Argumentos:
+            x: posicion horizontal de pacman en el mapa (pixeles)
+            y: posision vertical de pacman en el mapa (pixeles)
+        Retorna:
+            None"""
         self.x = x
         self.y = y
         self.direccion = "quieto"
         self.frame_animacion = 0
         self.boca_abriendo = True
     
-    def choca_con(self, otra_criatura): # Para Pacman vs Fantasmas
+    def choca_con(self, otra_criatura: Criatura)-> bool: # Para Pacman vs Fantasmas
+        """Verifica si pacman esta chocando con otra criatura (fantasma)
+        Argumentos:
+            Criatura: otra criatura del juego (fantasmas)
+        Retorna:
+            bool: True si pacman choca con otra criatura, False en caso contrario"""
         return self.obtener_hitbox().colliderect(otra_criatura.obtener_hitbox()) # True o False
     
-    def comer_punto(self):
+    def comer_punto(self)->None:
+        """Hace que pacman coma un punto normal en el mapa
+        suma 10 puntos y alterna el sonido de comer 
+        Retorna: 
+            None"""
         self.sumar_puntos(10)
         if self.alternar_sonido_dot == 0:
             self.sonido_dot_0.play()
@@ -189,11 +265,19 @@ class PacMan (Criatura):
             self.sonido_dot_1.play()
             self.alternar_sonido_dot = 0
     
-    def comer_power_pellet(self):
+    def comer_power_pellet(self)->None:
+        """"hace que pacman coma un power pellet 
+        activando la super y sumando 50 puntos 
+        Retorna:
+           None"""
         self.sumar_puntos(50)
         self.activar_super()
     
-    def iniciar_muerte(self):
+    def iniciar_muerte(self)->None:
+        """Inicia la animacion de muerte de pacman 
+        Cambiando la direcion a quieto reinicia el frame de muerte y reproduce el sonido de muerte
+        Retorna:
+            None"""
         self.estado = "muriendo"
         self.direccion = "quieto"
         self.frame_muerte_actual = 0
@@ -201,7 +285,11 @@ class PacMan (Criatura):
         self.tiempo_ultimo_frame_muerte = pg.time.get_ticks()
         self.sonido_muerte.play()
     
-    def actualizar_muerte(self):
+    def actualizar_muerte(self)-> bool:
+        """Actualiza la animacion de muerte de pacman 
+        avanza los frames de la animacion segun el tiempo al terminar la animacion reta una vida y vuelve al estado normal
+        Retorna:
+            bool True si termino la animacion de muerte, False si todavia sigue o si pacman no muerio"""
         if self.estado != "muriendo":
             return False
         tiempo_ahora = pg.time.get_ticks()
@@ -214,7 +302,10 @@ class PacMan (Criatura):
             return True
         return False
     
-    def cargar_frames_muerte(self):
+    def cargar_frames_muerte(self)->None:
+        """Carga las imagenes que generan la animacion de muerte del pacman
+        Retorna:
+            None"""
         self.frames_muerte = []
         escala = TILE_SIZE
         for i in range(13):
@@ -222,7 +313,13 @@ class PacMan (Criatura):
             imagen = pg.transform.scale(imagen, (int(escala), int(escala))) 
             self.frames_muerte.append(imagen)
     
-    def manejar_tunel(self, ancho_pantalla):
+    def manejar_tunel(self, ancho_pantalla: int)-> None:
+        """Maneja los tuneles laterales del mapa 
+        si pacman sale por el lado derecho del mapa aparece en el izquierdo, si entra por el tunel izquierdo sale por el derecho
+        Argumentos:
+            Ancho_pantalla: ancho de la pantalla medido en pixeles
+        Retorna:
+            None"""
     # Si PacMan sale completamente por la izquierda, aparece del otro lado, por la derecha.
         if self.x < -self.radio:
             self.x = ancho_pantalla + self.radio
