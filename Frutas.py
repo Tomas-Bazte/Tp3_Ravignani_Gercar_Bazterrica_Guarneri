@@ -1,4 +1,5 @@
 import pygame as pg
+import entidades
 Frutas_dic = {
  "cherry" : {
 "imagen" : "cherry.png",
@@ -49,7 +50,7 @@ frutas_nivel = {
                 13 : "key"
                 }
 class Frutas(pg.sprite.Sprite):
-    def __init__(self, x, y, nivel, tile_size = 18):
+    def __init__(self, x: int, y: int, nivel: int, tile_size : int = 18):
         super().__init__()
         self.x = x
         self.y = y
@@ -67,7 +68,13 @@ class Frutas(pg.sprite.Sprite):
         self.comida = False
         self.sonido_fruta = pg.mixer.Sound("sonidos_pacman/eat_fruit.wav")
     
-    def actualizar(self):
+    def actualizar(self)->None:
+        """actualiza el estado de la frutas 
+        si la fruta no fue comida verifica si pasaron los 9 segundos de duracion, si ya fue comida
+        verifica si paso el segundo donde se muestra la contidad de puntos 
+        cuando se cumple uno de estos elimina la fruta del grupo de sprites 
+        Retorna: 
+            None"""
         tiempo_actual = pg.time.get_ticks()
         if not self.comida: # Si la fruta no fue comida, verificamos si pasaron los 9 segundos de vida.
             if tiempo_actual - self.tiempo_aparicion >= self.duracion_visible:
@@ -76,12 +83,25 @@ class Frutas(pg.sprite.Sprite):
             if tiempo_actual - self.tiempo_comida >= self.duracion_texto:
                     self.kill() # Texto dsp de un segundo desaparece.
     
-    def obtener_tipo(self,nivel):
+    def obtener_tipo(self,nivel: int)->str:
+        """obtiene el tipo de fruta con respecto al nivel 
+        para niveles iguales o mayores a 13 siempre devolvera 'key' 
+        argumentos:
+            nivel: numero de nivel actual
+        Retorna:
+            string con en nombre de la fruta"""
         if nivel >= 13:
             return "key"
         return frutas_nivel[nivel]
 
-    def comer_frutas(self, pacman):
+    def comer_frutas(self, pacman: object)->None:
+        """Verifica si pacman comio la fruta 
+        si pacman colisiona con la fruta se reproduce el sonido coresopondiente se guarda el tipo de fruta en una lista
+        y se remplaza la imagen de la fruta por loos puntos dados
+        Argumentos:
+            Objeto pacman: protagonista del juego
+        Retorna:
+            None"""
         if self.comida:
             return        
         if pacman.rect.colliderect(self.rect):
