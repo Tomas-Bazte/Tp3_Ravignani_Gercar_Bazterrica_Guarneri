@@ -283,7 +283,7 @@ class Pinky(Fantasma, pg.sprite.Sprite):
         self.mover()
 
 class Clyde(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x: int, y:int, nombre: str, color: tuple, esquina_scatter: tuple, pos_Pc: tuple, x_casa: int, y_casa : int, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         
         self.sprites = {
@@ -305,7 +305,10 @@ class Clyde(Fantasma, pg.sprite.Sprite):
         ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->None:
+        """Define el objetivo de Clayd
+        si pacman se encuentra a mas de 8 titles lo persigue
+        si esta a 8 titles o menos vuelve a su esquina scatter"""
         posicion_actual = (self.rect.x, self.rect.y)
         distancia = (self.pos_Pc[0] - posicion_actual[0])**2 + (self.pos_Pc[1] - posicion_actual[1])**2
         if distancia  > (8 * TILE_SIZE)**2:
@@ -313,14 +316,20 @@ class Clyde(Fantasma, pg.sprite.Sprite):
         else:
             return self.esquina_scatter
     
-    def ejecutar(self, pos_Pc):
+    def ejecutar(self, pos_Pc: tuple)->None:
+        """Ejecuta la logica de Clayde 
+        Actualiza la posicion de pacman, alterna el estado, calcula la direcion y lo mueve
+        Argumentos:
+            pos_Pc: tupla con la posicion actual de pacman
+        Retorna:
+            None"""
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
         self.mover()
 
 class Inky(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, blinky, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x : int, y : int, nombre : str, color:tuple, esquina_scatter: tuple, pos_Pc: tuple, dir_pc:str, blinky: Blinky, x_casa: int, y_casa: int, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.dir_pc = dir_pc
         self.blinky = blinky
@@ -344,13 +353,25 @@ class Inky(Fantasma, pg.sprite.Sprite):
         ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->tuple:
+        """Define el objetivo de inky
+        Calcula 1,5 titles adelante de pacman luego toma la distancia desde blinky hasta este punto y la duplica generando un objetivo
+        proyectado
+        Retorna:
+            objetivo: Tupla con posicion a la cual se movera"""
         x, y = direcciones[self.dir_pc]
         objetivo_parcial = (self.pos_Pc[0] + x * 2 * TILE_SIZE, self.pos_Pc[1] + y * 2 * TILE_SIZE)
         objetivo = (2 * objetivo_parcial[0] - self.blinky.rect.x, 2 * objetivo_parcial[1] - self.blinky.rect.y)
         return objetivo
     
-    def ejecutar(self, pos_Pc, dir_pc):
+    def ejecutar(self, pos_Pc: tuple, dir_pc: str)->None:
+        """ejecuta la logica completa de inky
+        acutualiza la direcion y posicion de pacman alterna el estado calcula la direcion del fantasma y lo mueve
+        Argumentos:
+            pos_Pc: Posicion actual de pacman
+            dir_pc: direcion acutual de pacman
+        Retorna:
+            None"""
         self.pos_Pc = pos_Pc
         self.dir_pc = dir_pc
         self.alternar_estado()
