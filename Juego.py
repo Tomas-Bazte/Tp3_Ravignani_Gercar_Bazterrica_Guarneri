@@ -6,6 +6,7 @@ from Frutas import Frutas
 from Intermissions import Intermission
 from entidades import TILE_SIZE
 from Menu import menu_inicio
+from Fantasma import Blinky, Pinky, Clyde, Inky
 
 pg.init()
 pg.mixer.init()
@@ -24,7 +25,7 @@ fuente = pg.font.SysFont("Courier", 30, bold=True)
 
 mapa = Cargar_Mapa("mapa.txt")
 
-grupo_paredes, grupo_puntos, Pos_Pm, Puertas = Dibujar_Mapa(
+grupo_paredes, grupo_puntos, Pos_Pm, Puertas, Spawns = Dibujar_Mapa(
     mapa_surface,
     mapa,
     TILE_SIZE
@@ -67,7 +68,6 @@ contando = False
 sonido_inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
 canal_inicio = None
 
-
 def cambiar_color_paredes(grupo_paredes, color):
     for pared in grupo_paredes:
         pared.image.fill((0, 0, 0))
@@ -77,7 +77,6 @@ def cambiar_color_paredes(grupo_paredes, color):
             pared.image.get_rect(),
             1
         )
-
 
 def iniciar_intermission_por_nivel(nivel_a_probar):
     intermission.cargar_frames_intermission_1(nivel_a_probar)
@@ -100,6 +99,65 @@ def iniciar_ready(con_sonido=False):
 jugando = True
 Fantasmas , Esquinas = menu_inicio(pantalla)
 
+esquinas_scatters = {
+    "Superior Izquierda": (0, 0),
+    "Superior Derecha":   (MAPA_ANCHO, 0),
+    "Inferior Izquierda": (0, MAPA_ALTO),
+    "Inferior Derecha":   (MAPA_ANCHO, MAPA_ALTO)
+}
+
+fantasmas = {
+    1: ('Blinky', Blinky),
+    2: ('Pinky', Pinky),
+    3: ('Inky', Inky),
+    4: ('Clyde', Clyde)
+}
+
+colores = {
+    1: (255, 0, 0),
+    2: (255, 184, 255),
+    3: (0, 255, 255),
+    4: (255, 184, 82)
+}
+
+puntos_fantasmas = [200,400,800,1600]
+fantasmas_comidos = 0
+
+def incorporar_fantasmas(id_elegido, esquinas_elegidas, spawns, grupo_paredes):
+    lista_fantasmas = []
+    x_casa = MAPA_ANCHO // 2
+    y_casa = 14 * TILE_SIZE
+    blinky_ref = None
+
+    for i, id in enumerate(id_elegido):
+        if id not in fantasmas.keys():
+            continue
+        nombre, clase = fantasmas[id]
+        color = colores[id]
+        if i < len(spawns):
+            spawn = spawns[i]
+        else:
+            spawn = spawns[0]
+        x = spawn[0]
+        y = spawn[1]
+        
+        esquina_scatter = esquinas_scatters[esquinas_elegidas[id]]
+
+        pos_Pc = (pacman.x, pacman.y)
+
+        if clase == Blinky:
+            f = Blinky(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_paredes)
+            blinky_ref = f
+        elif clase == Clyde:
+            f = Clyde(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_paredes)
+        elif clase == Pinky:
+            f = Pinky(x, y, nombre, color, esquina_scatter, pos_Pc, pacman.direccion, x_casa, y_casa, grupo_paredes)
+        elif clase == Inky:
+            f = Inky(x, y, nombre, color, esquina_scatter, pos_Pc, pacman.direccion, blinky_ref, x_casa, y_casa, grupo_paredes)
+        lista_fantasmas.append(f)
+    return lista_fantasmas
+
+fantasmas_juego = incorporar_fantasmas(Fantasmas, Esquinas, Spawns, grupo_paredes)
 estado_juego = iniciar_ready(con_sonido=True)
 
 while jugando:
@@ -194,6 +252,10 @@ while jugando:
 
                     if punto.es_power_pellet:
                         pacman.comer_power_pellet()
+                        fantasmas_comidos = 0
+                        for fantasma in fantasmas_juego:
+                            if fantasma.estado != 'muerto':
+                                fantasma.activar_asustado()
                     else:
                         pacman.comer_punto()
 
@@ -212,6 +274,23 @@ while jugando:
                             frutas_aparecidas += 1
 
                     punto.kill()
+        
+            for fantasma in fantasmas_juego:
+                if type(fantasma) == Pinky or type(fantasma) == Inky:
+                    fantasma.ejecutar((int(pacman.x), int(pacman.y)), pacman.direccion, dt)
+                else:
+                    fantasma.ejecutar((int(pacman.x), int(pacman.y)), dt)
+
+            for fantasma in fantasmas_juego:
+                if pacman.rect.colliderect(fantasma.rect):
+                    if pacman.modo_super and fantasma.estado == 'asustado':
+                        fantasma.muerto()
+                        pacman.sumar_puntos(puntos_fantasmas[fantasmas_comidos])
+                        fantasmas_comidos += 1
+                    elif fantasma.estado != 'muerto' and fantasma.estado != 'asustado':
+                        pacman.iniciar_muerte()
+                        fantasmas_comidos = 0
+                        break
 
             for fruta in grupo_frutas.copy():
                 fruta.comer_frutas(pacman)
@@ -311,6 +390,8 @@ while jugando:
         Puertas.draw(mapa_surface)
 
     pacman.dibujar(mapa_surface)
+    for fantasma in fantasmas_juego:
+        fantasma.Dibujar(mapa_surface)
 
     if estado_juego == "ready":
         dibujar_ready(mapa_surface)

@@ -3,7 +3,7 @@ import pygame as pg
 import random
 
 Estado = [7000, 20000, 7000, 20000, 5000, 20000, 5000]
-direcciones = {
+direcciones_default = {
     'derecha': (1,0),
     'izquierda': (-1,0),
     'arriba': (0,-1),
@@ -40,11 +40,10 @@ class Fantasma(Criatura):
             pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Asustado/Arcade - Pac-Man - General Sprites - White Ghost_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
             pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Asustado/Arcade - Pac-Man - General Sprites - White Ghost_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE))
             ],
-            'muerto': pg.transform.smoothscale(pg.image.load('ruta').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            'ojos_derecha': pg.transform.smoothscale(pg.image.load('ruta').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            'ojos_izquierda': pg.transform.smoothscale(pg.image.load('ruta').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            'ojos_arriba': pg.transform.smoothscale(pg.image.load('ruta').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            'ojos_abajo': pg.transform.smoothscale(pg.image.load('ruta').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            'ojos_derecha': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_derecha.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            'ojos_izquierda': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_izquierda.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            'ojos_arriba': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_arriba.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            'ojos_abajo': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_abajo.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
         }
 
     def definir_objetivo(self):
@@ -71,7 +70,7 @@ class Fantasma(Criatura):
         for direccion, disponible in direcciones_libres.items():
             if not disponible or direccion == opuesto[self.direccion]:
                 continue
-            x, y = direcciones[direccion]
+            x, y = direcciones_default[direccion]
             proxima_posicion = (self.rect.x + x, self.rect.y + y)
             distancia = (objetivo[0] - proxima_posicion[0])**2 + (objetivo[1] - proxima_posicion[1])**2
             posibles_posiciones[direccion] = distancia
@@ -128,10 +127,10 @@ class Fantasma(Criatura):
         else:
             self.estado = 'chase'
 
-    def mover(self):
-        x, y = direcciones[self.direccion]
-        self.xr += x * self.velocidad
-        self.yr += y * self.velocidad
+    def mover(self, dt):
+        x, y = direcciones_default[self.direccion]
+        self.xr += x * self.velocidad * TILE_SIZE * dt
+        self.yr += y * self.velocidad * TILE_SIZE * dt
         self.rect.x = int(self.xr)
         self.rect.y = int(self.yr)
 
@@ -176,11 +175,11 @@ class Blinky(Fantasma, pg.sprite.Sprite):
     def definir_objetivo(self):
         return self.pos_Pc
 
-    def ejecutar(self, pos_Pc):
+    def ejecutar(self, pos_Pc, dt):
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
-        self.mover()
+        self.mover(dt)
 
 class Pinky(Fantasma, pg.sprite.Sprite):
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, x_casa, y_casa, grupo_Paredes):
@@ -207,16 +206,16 @@ class Pinky(Fantasma, pg.sprite.Sprite):
         }
 
     def definir_objetivo(self):
-        x, y = direcciones[self.dir_pc]
+        x, y = direcciones_default[self.dir_pc]
         objetivo = (self.pos_Pc[0] + x * 4 * TILE_SIZE, self.pos_Pc[1] + y * 4 * TILE_SIZE)
         return objetivo
 
-    def ejecutar(self, pos_Pc, dir_pc):
+    def ejecutar(self, pos_Pc, dir_pc, dt):
         self.dir_pc = dir_pc
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
-        self.mover()
+        self.mover(dt)
 
 class Clyde(Fantasma, pg.sprite.Sprite):
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
@@ -249,11 +248,11 @@ class Clyde(Fantasma, pg.sprite.Sprite):
         else:
             return self.esquina_scatter
     
-    def ejecutar(self, pos_Pc):
+    def ejecutar(self, pos_Pc, dt):
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
-        self.mover()
+        self.mover(dt)
 
 class Inky(Fantasma, pg.sprite.Sprite):
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, blinky, x_casa, y_casa, grupo_Paredes):
@@ -281,14 +280,14 @@ class Inky(Fantasma, pg.sprite.Sprite):
         }
 
     def definir_objetivo(self):
-        x, y = direcciones[self.dir_pc]
+        x, y = direcciones_default[self.dir_pc]
         objetivo_parcial = (self.pos_Pc[0] + x * 2 * TILE_SIZE, self.pos_Pc[1] + y * 2 * TILE_SIZE)
         objetivo = (2 * objetivo_parcial[0] - self.blinky.rect.x, 2 * objetivo_parcial[1] - self.blinky.rect.y)
         return objetivo
     
-    def ejecutar(self, pos_Pc, dir_pc):
+    def ejecutar(self, pos_Pc, dir_pc, dt):
         self.pos_Pc = pos_Pc
         self.dir_pc = dir_pc
         self.alternar_estado()
         self.estados()
-        self.mover()
+        self.mover(dt)

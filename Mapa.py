@@ -90,7 +90,7 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 18) -> None:
                 Spawns.append((x,y))
 
                 
-    return grupo_Paredes, grupo_puntos, Pos_Pm , Puerta
+    return grupo_Paredes, grupo_puntos, Pos_Pm , Puerta, Spawns
 
 def cambiar_color(self, color): # Funcion que sirve para cambiar el color del mapa de azul a blanco cuanto termine el nivel.
     self.image.fill((0, 0, 0))

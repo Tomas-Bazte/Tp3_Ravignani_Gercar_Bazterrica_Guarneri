@@ -70,7 +70,6 @@ def menu_inicio(pantalla):
 
                         if Esquinas_actual >= 4:
                             return seleccionados , Esquinas
-            
 
         pantalla.fill(NEGRO)
 
