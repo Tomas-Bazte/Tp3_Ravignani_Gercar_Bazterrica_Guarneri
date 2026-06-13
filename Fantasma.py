@@ -16,7 +16,7 @@ class Fantasma(Criatura):
     velocidad_asustado = 0.50
     velocidad_ojos = 1.50
     
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x : int, y : int, nombre : str, color : tuple, esquina_scatter: tuple, pos_Pc : tuple, x_casa : int, y_casa : int, grupo_Paredes):
         super().__init__(x, y, Fantasma.velocidad_normal)
         self.nombre = nombre
         self.color = color
@@ -50,7 +50,12 @@ class Fantasma(Criatura):
     def definir_objetivo(self):
         None
 
-    def analizar_colisiones(self):
+    def analizar_colisiones(self)->dict:
+        """alaniza que direcion esta libre para moverse
+        si alguna direcion no tiene una pared la toma como disponible
+        Return:
+            direciones_libres: dicionario donde la clave es la direcion y el valor un bool que indica si la direcion esta 
+            libre"""
         avance = max(1, int(self.velocidad))
         direcciones_libres = {}
         Direcciones = {
@@ -65,7 +70,15 @@ class Fantasma(Criatura):
             direcciones_libres[direccion] = not colision
         return direcciones_libres
     
-    def direcciones(self, objetivo):
+    def direcciones(self, objetivo: tuple) -> str :
+        """elije la mejor direcion para acercarse a un objetivo 
+         obteniendo las direciones libres y calculando cul le conviene mas para llegar al
+          objetivo en el menor tiempo
+        Argumentos:
+            objetivo: tupla con la ubicacion del objetivo
+        Retorna: 
+            direcion elejida para moverse
+         """
         direcciones_libres = self.analizar_colisiones()
         posibles_posiciones = {}
         for direccion, disponible in direcciones_libres.items():
@@ -77,7 +90,14 @@ class Fantasma(Criatura):
             posibles_posiciones[direccion] = distancia
         return min(posibles_posiciones, key=posibles_posiciones.get)
 
-    def estados(self):
+    def estados(self)->None:
+        """Define los comportaminetos del fantasma dependiendo el modo en el que se encuentre
+        scatter: su velocidad es normal y se dirge a su esquina
+        chase: persigue segun la logica particular del fantasma
+        muerto: vuelve a la casa con una velocidad mucho mas rapida
+        asustado: elije direciones aleatorias
+        Retorna:
+            None"""
         if self.estado == 'scatter':
             self.velocidad = self.velocidad_normal
             objetivo = self.esquina_scatter
@@ -92,12 +112,19 @@ class Fantasma(Criatura):
             return
         self.direccion = self.direcciones(objetivo)
 
-    def activar_asustado(self):
+    def activar_asustado(self)->None:
+        """Activa el modo asuustado de pacman bajando su velocidad y cambiando de direcion
+         Retorna:
+              None """
         self.estado = 'asustado'
         self.velocidad = self.velocidad_asustado
         self.direccion = opuesto[self.direccion]
 
-    def asustado(self):
+    def asustado(self)->None:
+        """elije una direcion aleatoria cuando los fantasmas estan asustados 
+        solo elije entre direciones disponibles intentando de evitar volver hacia atras salvo que no tenga opcion
+        Retorna:
+            None"""
         Direccion = []
         posibles_direcciones = self.analizar_colisiones()
         for direccion in posibles_direcciones.keys():
@@ -107,10 +134,19 @@ class Fantasma(Criatura):
                 Direccion.append(direccion)
         self.direccion = random.choice(Direccion)
 
-    def muerto(self):
+    def muerto(self)-> None:
+        """Cambia el estado del gantasma a muerto
+        Retorna:
+            None"""
         self.estado = 'muerto'
 
-    def alternar_estado(self):
+    def alternar_estado(self)->None:
+        """Alterna entre los estados scatter y chase segun el timpo
+        usa una lista para saber cuanto dura cada estado segun el nivel si el fantasma esta asustado no cambia de estado
+        si esta muerto al revivir vuelve a modo scatter
+        Retorna:
+            None
+        """
         if self.estado == 'asustado':
             return
         if self.estado == 'muerto':
@@ -128,14 +164,22 @@ class Fantasma(Criatura):
         else:
             self.estado = 'chase'
 
-    def mover(self):
+    def mover(self)->None:
+        """Mueve al fantasma en la direcion actual
+        Retorna:
+            None"""
         x, y = direcciones[self.direccion]
         self.xr += x * self.velocidad
         self.yr += y * self.velocidad
         self.rect.x = int(self.xr)
         self.rect.y = int(self.yr)
 
-    def Dibujar(self, pantalla):
+    def Dibujar(self, pantalla)->None:
+        """Dibuja el sprite corespondiente de cada fantasma en pantalla
+        Argumento:
+            Pantalla: superficie donde se dibuja el fantasma
+        Retorna:
+            None"""
         if pg.time.get_ticks() - self.tiempo_frame >= self.duracion_frame:
             if self.estado == 'asustado':
                 self.frame_actual = (1 + self.frame_actual) % len(self.sprites_compartidos['asustado'])
@@ -151,7 +195,7 @@ class Fantasma(Criatura):
         pantalla.blit(sprite, self.rect)
 
 class Blinky(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x : int, y : int, nombre : str, color : tuple, esquina_scatter : tuple, pos_Pc : tuple, x_casa : int, y_casa : int, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
 
         self.sprites = {
@@ -173,17 +217,29 @@ class Blinky(Fantasma, pg.sprite.Sprite):
         ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->tuple:
+        """define el objetivo de Blinky
+        Blinky persigue directamente a pacman
+        Retorna:
+            pos_Pc: tupla con posicion actual de pacman
+        """
         return self.pos_Pc
 
-    def ejecutar(self, pos_Pc):
+    def ejecutar(self, pos_Pc: tuple)->None:
+        """Ejecuta la logica completa de Blinky
+        actualiza la direcion de pacman alterna el estado define la pocision
+        y por ultimo lo mueve
+        Argumentos:
+            pos_Pc: tupla con ubicacion actual de pacman
+        Retorna:
+            None"""
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
         self.mover()
 
 class Pinky(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x: int, y: int, nombre: str, color: tuple, esquina_scatter: tuple, pos_Pc: tuple, dir_pc:str, x_casa: int, y_casa: int, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.dir_pc = dir_pc
 
@@ -206,12 +262,20 @@ class Pinky(Fantasma, pg.sprite.Sprite):
         ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->tuple:
+        """Define la direcion de Pinky
+        Pinky apunta a cuatro titles de distancia de la direcion a la que apunta pacman
+        Return:
+            objetivo: Tupla con posicion del objetivo"""
         x, y = direcciones[self.dir_pc]
         objetivo = (self.pos_Pc[0] + x * 4 * TILE_SIZE, self.pos_Pc[1] + y * 4 * TILE_SIZE)
         return objetivo
 
-    def ejecutar(self, pos_Pc, dir_pc):
+    def ejecutar(self, pos_Pc: tuple, dir_pc: str)->None:
+        """Define la logica de pinky
+        Actualiza la posicion y direcion de pacman alterna el estado define la direcion de pinky y lo mueve
+        Retorna:
+            None"""
         self.dir_pc = dir_pc
         self.pos_Pc = pos_Pc
         self.alternar_estado()

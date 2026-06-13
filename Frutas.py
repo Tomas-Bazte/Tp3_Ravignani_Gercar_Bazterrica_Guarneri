@@ -94,6 +94,3 @@ class Frutas(pg.sprite.Sprite):
             self.tiempo_comida = pg.time.get_ticks()
             self.image = self.fuente_texto_puntos.render(str(self.puntos), True, (255,184,255)) # Texto rosado puntos
             self.rect = self.image.get_rect(center=(self.x, self.y))
-    
-
-
