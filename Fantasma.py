@@ -1,82 +1,152 @@
 from entidades import Criatura, TILE_SIZE
+from Mapa import MAPA_ANCHO, MAPA_ALTO
 import pygame as pg
 import random
 
 Estado = [7000, 20000, 7000, 20000, 5000, 20000, 5000]
 direcciones_default = {
-    'derecha': (1,0),
-    'izquierda': (-1,0),
-    'arriba': (0,-1),
-    'abajo': (0,1)
+    'derecha': (1, 0),
+    'izquierda': (-1, 0),
+    'arriba': (0, -1),
+    'abajo': (0, 1)
 }
-opuesto = {'derecha':'izquierda', 'izquierda': 'derecha', 'arriba': 'abajo', 'abajo': 'arriba'}
+opuesto = {'derecha': 'izquierda', 'izquierda': 'derecha', 'arriba': 'abajo', 'abajo': 'arriba'}
 
 class Fantasma(Criatura):
-    velocidad_normal = 0.75
-    velocidad_asustado = 0.50
-    velocidad_ojos = 1.50
-    
+    velocidad_normal = 3.75
+    velocidad_asustado = 2.50
+    velocidad_ojos = 5.00
+
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
         super().__init__(x, y, Fantasma.velocidad_normal)
         self.nombre = nombre
         self.color = color
         self.esquina_scatter = esquina_scatter
         self.pos_Pc = pos_Pc
-        self.estado = "scatter"  
+        self.estado = "scatter"
+        self.direccion = 'derecha'
+        self.en_casa = True
+        self.grupo_Puertas = pg.sprite.Group()
         self.rect = pg.Rect(x, y, TILE_SIZE, TILE_SIZE)
         self.estado_actual = 0
         self.tiempo_estado = pg.time.get_ticks()
+        self.puerta_x = MAPA_ANCHO // 2
+        self.puerta_y = 12 * TILE_SIZE
+        self.puerta = (self.puerta_x, self.puerta_y)
         self.xr = float(x)
         self.yr = float(y)
+        self.x_casa = x_casa
+        self.y_casa = y_casa
         self.casa = (x_casa, y_casa)
         self.grupo_Paredes = grupo_Paredes
         self.frame_actual = 0
         self.tiempo_frame = pg.time.get_ticks()
         self.duracion_frame = 200
+        self.tiempo_asustado = 0
+        self.ultimo_tile = (-1, -1)
+        self.recien_salio = False
+        self.dir_bounce = -1
+        self.mejor_dist_objetivo = float('inf')
+        self.tiempo_sin_progreso = pg.time.get_ticks()
+        self.forzar_random_hasta = 0
+        self.bounce_limite_sup = y_casa - TILE_SIZE
+        self.bounce_limite_inf = y_casa + TILE_SIZE
+
         self.sprites_compartidos = {
             'asustado': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Asustado/Arcade - Pac-Man - General Sprites - Blue Ghost (1)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Asustado/Arcade - Pac-Man - General Sprites - Blue Ghost (1)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Asustado/Arcade - Pac-Man - General Sprites - White Ghost_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Asustado/Arcade - Pac-Man - General Sprites - White Ghost_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE))
+                pg.transform.smoothscale(pg.image.load('fantasmas/Asustado/Arcade - Pac-Man - General Sprites - Blue Ghost (1)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Asustado/Arcade - Pac-Man - General Sprites - Blue Ghost (1)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Asustado/Arcade - Pac-Man - General Sprites - White Ghost_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Asustado/Arcade - Pac-Man - General Sprites - White Ghost_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE))
             ],
-            'ojos_derecha': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_derecha.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            'ojos_izquierda': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_izquierda.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            'ojos_arriba': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_arriba.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            'ojos_abajo': pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Ojos/Ojos_abajo.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            'ojos_derecha':   pg.transform.smoothscale(pg.image.load('fantasmas/Ojos/Ojos_derecha.png').convert_alpha(),   (TILE_SIZE, TILE_SIZE)),
+            'ojos_izquierda': pg.transform.smoothscale(pg.image.load('fantasmas/Ojos/Ojos_izquierda.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            'ojos_arriba':    pg.transform.smoothscale(pg.image.load('fantasmas/Ojos/Ojos_arriba.png').convert_alpha(),    (TILE_SIZE, TILE_SIZE)),
+            'ojos_abajo':     pg.transform.smoothscale(pg.image.load('fantasmas/Ojos/Ojos_abajo.png').convert_alpha(),     (TILE_SIZE, TILE_SIZE)),
         }
 
     def definir_objetivo(self):
-        None
+        return self.esquina_scatter
 
-    def analizar_colisiones(self):
-        avance = max(1, int(self.velocidad))
+    def alineado(self):
+        cx = self.rect.x % TILE_SIZE
+        cy = self.rect.y % TILE_SIZE
+        return cx == 0 and cy == 0
+
+    def analizar_colisiones(self, tile_x, tile_y):
         direcciones_libres = {}
-        Direcciones = {
-            'derecha': (avance, 0),
-            'izquierda': (-avance, 0),
-            'arriba': (0, -avance),
-            'abajo': (0, avance)
-        }
-        for direccion, (x,y) in Direcciones.items():
-            hitbox_fantasma = self.rect.move(x,y)
-            colision = bool(hitbox_fantasma.collideobjects(self.grupo_Paredes))
-            direcciones_libres[direccion] = not colision
+        en_casa_o_saliendo = self.estado in ['saliendo', 'muerto'] or self.en_casa
+
+        for direccion, (dx, dy) in direcciones_default.items():
+            objx = tile_x + dx
+            objy = tile_y + dy
+            if direccion == 'arriba' and self.estado not in ['muerto', 'asustado'] and not self.recien_salio:
+                if (objy == 10 or objy == 22) and (11 <= objx <= 16):
+                    direcciones_libres[direccion] = False
+                    continue
+
+            rect_prueba = pg.Rect(objx * TILE_SIZE, objy * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+
+            col_pared = bool(rect_prueba.collideobjects(self.grupo_Paredes.sprites()))
+            col_puerta = False
+            if not en_casa_o_saliendo and hasattr(self, 'grupo_Puertas'):
+                col_puerta = bool(rect_prueba.collideobjects(self.grupo_Puertas.sprites()))
+
+            direcciones_libres[direccion] = not col_pared and not col_puerta
         return direcciones_libres
-    
+
     def direcciones(self, objetivo):
-        direcciones_libres = self.analizar_colisiones()
+        tile_x = self.rect.x // TILE_SIZE
+        tile_y = self.rect.y // TILE_SIZE
+
+        direcciones_libres = self.analizar_colisiones(tile_x, tile_y)
         posibles_posiciones = {}
+
         for direccion, disponible in direcciones_libres.items():
             if not disponible or direccion == opuesto[self.direccion]:
                 continue
-            x, y = direcciones_default[direccion]
-            proxima_posicion = (self.rect.x + x, self.rect.y + y)
-            distancia = (objetivo[0] - proxima_posicion[0])**2 + (objetivo[1] - proxima_posicion[1])**2
-            posibles_posiciones[direccion] = distancia
-        return min(posibles_posiciones, key=posibles_posiciones.get)
+            dx, dy = direcciones_default[direccion]
+            proximo_tile_x = tile_x + dx
+            proximo_tile_y = tile_y + dy
+            dist_x = (objetivo[0] // TILE_SIZE) - proximo_tile_x
+            dist_y = (objetivo[1] // TILE_SIZE) - proximo_tile_y
+            posibles_posiciones[direccion] = dist_x ** 2 + dist_y ** 2
+
+        if not posibles_posiciones:
+            return opuesto[self.direccion]
+
+        dist_actual = (((objetivo[0] // TILE_SIZE) - tile_x) ** 2 +
+                       ((objetivo[1] // TILE_SIZE) - tile_y) ** 2)
+
+        if dist_actual < self.mejor_dist_objetivo:
+            self.mejor_dist_objetivo = dist_actual
+            self.tiempo_sin_progreso = pg.time.get_ticks()
+
+        ahora = pg.time.get_ticks()
+        en_modo_random = ahora < self.forzar_random_hasta
+
+        if not en_modo_random and ahora - self.tiempo_sin_progreso > 3000:
+            self.tiempo_sin_progreso = ahora
+            self.mejor_dist_objetivo = float('inf')
+            self.forzar_random_hasta = ahora + 2000
+            en_modo_random = True
+
+        if en_modo_random:
+            dirs_libres = [d for d, libre in direcciones_libres.items() if libre and d != opuesto[self.direccion]]
+            if dirs_libres:
+                return random.choice(dirs_libres)
+
+        prioridad = ['arriba', 'izquierda', 'abajo', 'derecha']
+        min_dist = min(posibles_posiciones.values())
+        mejores = [d for d, dist in posibles_posiciones.items() if dist == min_dist]
+        for p in prioridad:
+            if p in mejores:
+                return p
+        return mejores[0]
 
     def estados(self):
+        pos_actual = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
+
         if self.estado == 'scatter':
             self.velocidad = self.velocidad_normal
             objetivo = self.esquina_scatter
@@ -87,205 +157,370 @@ class Fantasma(Criatura):
             self.velocidad = self.velocidad_ojos
             objetivo = self.casa
         elif self.estado == 'asustado':
-            self.asustado()
+            self.velocidad = self.velocidad_asustado
+            if self.alineado() and pos_actual != self.ultimo_tile:
+                self.ultimo_tile = pos_actual
+                self.asustado()
             return
-        self.direccion = self.direcciones(objetivo)
+        elif self.estado == 'saliendo':
+            return
+
+        if self.en_casa:
+            return
+        if self.alineado() and pos_actual != self.ultimo_tile:
+            self.ultimo_tile = pos_actual
+            self.direccion = self.direcciones(objetivo)
+            self.recien_salio = False
 
     def activar_asustado(self):
-        self.estado = 'asustado'
-        self.velocidad = self.velocidad_asustado
-        self.direccion = opuesto[self.direccion]
+        if self.en_casa:
+            return
+        if self.estado in ['scatter', 'chase', 'asustado']:
+            self.estado = 'asustado'
+            self.velocidad = self.velocidad_asustado
+            self.direccion = opuesto[self.direccion]
+            self.frame_actual = 0
+            self.tiempo_asustado = pg.time.get_ticks()
+            self.ultimo_tile = (-1, -1)
 
     def asustado(self):
-        Direccion = []
-        posibles_direcciones = self.analizar_colisiones()
-        for direccion in posibles_direcciones.keys():
-            if posibles_direcciones[direccion]:
-                if direccion == opuesto[self.direccion]:
-                    continue
-                Direccion.append(direccion)
-        self.direccion = random.choice(Direccion)
+        pos_x = self.rect.x // TILE_SIZE
+        pos_y = self.rect.y // TILE_SIZE
+        posibles_direcciones = self.analizar_colisiones(pos_x, pos_y)
+
+        direcciones_validas = [
+            d for d, libre in posibles_direcciones.items()
+            if libre and d != opuesto[self.direccion]
+        ]
+        if not direcciones_validas:
+            direcciones_validas = [d for d, libre in posibles_direcciones.items() if libre]
+        if direcciones_validas:
+            self.direccion = random.choice(direcciones_validas)
 
     def muerto(self):
-        self.estado = 'muerto'
+        if self.estado != 'muerto':
+            self.estado = 'muerto'
+            self.velocidad = self.velocidad_ojos
+            self.ultimo_tile = (-1, -1)
 
     def alternar_estado(self):
+        if self.estado == 'saliendo' or self.en_casa:
+            return
         if self.estado == 'asustado':
+            if pg.time.get_ticks() - self.tiempo_asustado >= 6000:
+                self.frame_actual = 0
+                self.ultimo_tile = (-1, -1)
+                self.mejor_dist_objetivo = float('inf')
+                self.tiempo_sin_progreso = pg.time.get_ticks()
+                self.forzar_random_hasta = 0
+                self.estado = 'scatter' if self.estado_actual % 2 == 0 else 'chase'
             return
         if self.estado == 'muerto':
-            if self.rect.collidepoint(self.casa):
-                self.estado = 'scatter'
+            pos_actual_x = self.rect.x // TILE_SIZE
+            pos_actual_y = self.rect.y // TILE_SIZE
+            casa_tile_x = self.casa[0] // TILE_SIZE
+            casa_tile_y = self.casa[1] // TILE_SIZE
+            if pos_actual_x == casa_tile_x and abs(pos_actual_y - casa_tile_y) <= 1:
+                self.xr = float(self.casa[0])
+                self.yr = float(self.casa[1])
+                self.rect.x = self.casa[0]
+                self.rect.y = self.casa[1]
+                self.estado = 'saliendo'
+                self.ultimo_tile = (-1, -1)
+                self.mejor_dist_objetivo = float('inf')
+                self.tiempo_sin_progreso = pg.time.get_ticks()
+                self.forzar_random_hasta = 0
+                self.tiempo_estado = pg.time.get_ticks()
             return
+
         if self.estado_actual < len(Estado):
             if pg.time.get_ticks() - self.tiempo_estado >= Estado[self.estado_actual]:
                 self.estado_actual += 1
                 self.tiempo_estado = pg.time.get_ticks()
-                if self.estado_actual % 2 == 0:
-                    self.estado = 'scatter'
-                else:
-                    self.estado = 'chase'
+                self.ultimo_tile = (-1, -1)
+                self.mejor_dist_objetivo = float('inf')
+                self.tiempo_sin_progreso = pg.time.get_ticks()
+                self.forzar_random_hasta = 0
+                self.estado = 'scatter' if self.estado_actual % 2 == 0 else 'chase'
         else:
             self.estado = 'chase'
 
+    def mover_en_casa(self, dt):
+        velocidad = self.velocidad_normal * TILE_SIZE * dt
+        self.yr += self.dir_bounce * velocidad
+        self.rect.y = int(self.yr)
+
+        if self.yr <= self.bounce_limite_sup:
+            self.yr = float(self.bounce_limite_sup)
+            self.rect.y = self.bounce_limite_sup
+            self.dir_bounce = 1
+            self.direccion = 'abajo'
+        elif self.yr >= self.bounce_limite_inf:
+            self.yr = float(self.bounce_limite_inf)
+            self.rect.y = self.bounce_limite_inf
+            self.dir_bounce = -1
+            self.direccion = 'arriba'
+
     def mover(self, dt):
-        x, y = direcciones_default[self.direccion]
-        self.xr += x * self.velocidad * TILE_SIZE * dt
-        self.yr += y * self.velocidad * TILE_SIZE * dt
+        if self.estado == 'saliendo':
+            velocidad = self.velocidad_normal * TILE_SIZE * dt
+            if abs(self.rect.x - self.puerta_x) > 2:
+                if self.rect.x < self.puerta_x:
+                    self.xr += velocidad
+                else:
+                    self.xr -= velocidad
+                self.rect.x = int(self.xr)
+            else:
+                self.xr = float(self.puerta_x)
+                self.rect.x = self.puerta_x
+                self.yr -= velocidad
+                self.rect.y = int(self.yr)
+                destino_y = self.puerta_y - TILE_SIZE
+                if self.rect.y <= destino_y:
+                    self.rect.y = destino_y
+                    self.yr = float(destino_y)
+                    self.estado = 'scatter'
+                    self.ultimo_tile = (-1, -1)
+                    self.mejor_dist_objetivo = float('inf')
+                    self.tiempo_sin_progreso = pg.time.get_ticks()
+                    self.forzar_random_hasta = 0
+                    self.recien_salio = True
+                    self.tiempo_estado = pg.time.get_ticks()
+            return
+
+        dx, dy = direcciones_default[self.direccion]
+        self.xr += dx * self.velocidad * TILE_SIZE * dt
+        self.yr += dy * self.velocidad * TILE_SIZE * dt
+        ancho_mapa = MAPA_ANCHO
+        if self.xr < -TILE_SIZE:
+            self.xr += ancho_mapa + TILE_SIZE
+        elif self.xr > ancho_mapa:
+            self.xr -= ancho_mapa + TILE_SIZE
+
         self.rect.x = int(self.xr)
         self.rect.y = int(self.yr)
+        if self.estado not in ['saliendo']:
+            col_pared = bool(self.rect.collideobjects(self.grupo_Paredes.sprites()))
+            if col_pared:
+                if dx > 0:
+                    self.xr = float((self.rect.x // TILE_SIZE) * TILE_SIZE)
+                elif dx < 0:
+                    self.xr = float(((self.rect.x // TILE_SIZE) + 1) * TILE_SIZE)
+                elif dy > 0:
+                    self.yr = float((self.rect.y // TILE_SIZE) * TILE_SIZE)
+                elif dy < 0:
+                    self.yr = float(((self.rect.y // TILE_SIZE) + 1) * TILE_SIZE)
+                self.rect.x = int(self.xr)
+                self.rect.y = int(self.yr)
+
+    def reiniciar(self, x, y):
+        self.xr = float(x)
+        self.yr = float(y)
+        self.rect.topleft = (x, y)
+        self.direccion = 'derecha'
+        self.estado = 'scatter'
+        self.en_casa = True
+        self.estado_actual = 0
+        self.ultimo_tile = (-1, -1)
+        self.mejor_dist_objetivo = float('inf')
+        self.tiempo_sin_progreso = pg.time.get_ticks()
+        self.forzar_random_hasta = 0
+        self.recien_salio = False
+        self.tiempo_estado = pg.time.get_ticks()
+        self.dir_bounce = -1
 
     def Dibujar(self, pantalla):
         if pg.time.get_ticks() - self.tiempo_frame >= self.duracion_frame:
             if self.estado == 'asustado':
-                self.frame_actual = (1 + self.frame_actual) % len(self.sprites_compartidos['asustado'])
+                self.frame_actual = (self.frame_actual + 1) % 4
             elif self.estado != 'muerto':
-                self.frame_actual = 1 - self.frame_actual
+                self.frame_actual = (self.frame_actual + 1) % 2
             self.tiempo_frame = pg.time.get_ticks()
+
         if self.estado == 'asustado':
-            sprite = self.sprites_compartidos['asustado'][self.frame_actual]
+            tiempo_restante = 6000 - (pg.time.get_ticks() - self.tiempo_asustado)
+            if tiempo_restante <= 2000:
+                sprite = self.sprites_compartidos['asustado'][self.frame_actual]
+            else:
+                sprite = self.sprites_compartidos['asustado'][self.frame_actual % 2]
         elif self.estado == 'muerto':
             sprite = self.sprites_compartidos[f'ojos_{self.direccion}']
         else:
-            sprite = self.sprites[self.direccion][self.frame_actual]
+            sprite = self.sprites[self.direccion][self.frame_actual % 2]
+
         pantalla.blit(sprite, self.rect)
+
 
 class Blinky(Fantasma, pg.sprite.Sprite):
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
+        self.sprites = self._cargar_sprites()
 
-        self.sprites = {
-        'derecha': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'izquierda': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'arriba': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'abajo': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
+    def _cargar_sprites(self):
+        return {
+            'derecha': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'izquierda': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Left) (1)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Left) (1)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'arriba': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'abajo': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
         }
 
     def definir_objetivo(self):
         return self.pos_Pc
 
     def ejecutar(self, pos_Pc, dt):
+        if self.en_casa:
+            self.mover_en_casa(dt)
+            return
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
         self.mover(dt)
+
 
 class Pinky(Fantasma, pg.sprite.Sprite):
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, x_casa, y_casa, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.dir_pc = dir_pc
+        self.sprites = self._cargar_sprites()
 
-        self.sprites = {
-        'derecha': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'izquierda': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'arriba': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'abajo': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
+    def _cargar_sprites(self):
+        return {
+            'derecha': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'izquierda': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'arriba': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'abajo': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
         }
 
     def definir_objetivo(self):
-        x, y = direcciones_default[self.dir_pc]
-        objetivo = (self.pos_Pc[0] + x * 4 * TILE_SIZE, self.pos_Pc[1] + y * 4 * TILE_SIZE)
-        return objetivo
+        dx, dy = direcciones_default.get(self.dir_pc, (0, 0))
+        if self.dir_pc == 'arriba':
+            return (self.pos_Pc[0] - 4 * TILE_SIZE, self.pos_Pc[1] - 4 * TILE_SIZE)
+        return (self.pos_Pc[0] + dx * 4 * TILE_SIZE, self.pos_Pc[1] + dy * 4 * TILE_SIZE)
 
     def ejecutar(self, pos_Pc, dir_pc, dt):
+        if self.en_casa:
+            self.mover_en_casa(dt)
+            return
         self.dir_pc = dir_pc
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
         self.mover(dt)
 
+
 class Clyde(Fantasma, pg.sprite.Sprite):
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
-        
-        self.sprites = {
-        'derecha': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'izquierda': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'arriba': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'abajo': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
+        self.sprites = self._cargar_sprites()
+
+    def _cargar_sprites(self):
+        return {
+            'derecha': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'izquierda': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'arriba': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'abajo': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Down) (1)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Down) (1)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
         }
 
     def definir_objetivo(self):
-        posicion_actual = (self.rect.x, self.rect.y)
-        distancia = (self.pos_Pc[0] - posicion_actual[0])**2 + (self.pos_Pc[1] - posicion_actual[1])**2
-        if distancia  > (8 * TILE_SIZE)**2:
+        dist_x = (self.pos_Pc[0] - self.rect.x) // TILE_SIZE
+        dist_y = (self.pos_Pc[1] - self.rect.y) // TILE_SIZE
+        if (dist_x ** 2 + dist_y ** 2) > 64:
             return self.pos_Pc
-        else:
-            return self.esquina_scatter
-    
+        return self.esquina_scatter
+
     def ejecutar(self, pos_Pc, dt):
+        if self.en_casa:
+            self.mover_en_casa(dt)
+            return
         self.pos_Pc = pos_Pc
         self.alternar_estado()
         self.estados()
         self.mover(dt)
+
 
 class Inky(Fantasma, pg.sprite.Sprite):
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, blinky, x_casa, y_casa, grupo_Paredes):
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.dir_pc = dir_pc
         self.blinky = blinky
+        self.sprites = self._cargar_sprites()
 
-        self.sprites = {
-        'derecha': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'izquierda': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'arriba': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
-        'abajo': [
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-            pg.transform.smoothscale(pg.image.load('Tp3_Ravignani_Gercar_Bazterrica_Guarneri/fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-        ],
+    def _cargar_sprites(self):
+        return {
+            'derecha': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'izquierda': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'arriba': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'abajo': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
         }
 
     def definir_objetivo(self):
-        x, y = direcciones_default[self.dir_pc]
-        objetivo_parcial = (self.pos_Pc[0] + x * 2 * TILE_SIZE, self.pos_Pc[1] + y * 2 * TILE_SIZE)
-        objetivo = (2 * objetivo_parcial[0] - self.blinky.rect.x, 2 * objetivo_parcial[1] - self.blinky.rect.y)
-        return objetivo
-    
+        dx, dy = direcciones_default.get(self.dir_pc, (0, 0))
+        if self.dir_pc == 'arriba':
+            p_x = self.pos_Pc[0] - 2 * TILE_SIZE
+            p_y = self.pos_Pc[1] - 2 * TILE_SIZE
+        else:
+            p_x = self.pos_Pc[0] + dx * 2 * TILE_SIZE
+            p_y = self.pos_Pc[1] + dy * 2 * TILE_SIZE
+
+        if self.blinky is not None:
+            b_x, b_y = self.blinky.rect.x, self.blinky.rect.y
+        else:
+            b_x, b_y = self.esquina_scatter
+
+        return (b_x + 2 * (p_x - b_x), b_y + 2 * (p_y - b_y))
+
     def ejecutar(self, pos_Pc, dir_pc, dt):
+        if self.en_casa:
+            self.mover_en_casa(dt)
+            return
         self.pos_Pc = pos_Pc
         self.dir_pc = dir_pc
         self.alternar_estado()

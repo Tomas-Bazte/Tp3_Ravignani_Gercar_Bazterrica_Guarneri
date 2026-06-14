@@ -111,7 +111,7 @@ def menu_inicio(pantalla):
             for f in FANTASMAS:
                 if f["id"] == id_actual:
                     fantasma_actual = f
-                    Texto = fuente_normal.render(f"Asignar esquina a {fantasma_actual["nombre"]} {Esquinas_actual+1}/4",True,BLANCO)
+                    Texto = fuente_normal.render(f"Asignar esquina a {fantasma_actual['nombre']} {Esquinas_actual+1}/4",True,BLANCO)
                     pantalla.blit(Texto,Texto.get_rect(center=(ANCHO//2, 80)))
                 yor = 200
                 for numero, esquina in esquinas.items():
