@@ -17,7 +17,7 @@ class Fantasma(Criatura):
     velocidad_asustado = (7.5 * 0.50)
     velocidad_ojos = (7.5 * 1.5)
 
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x : int, y : int, nombre : str, color : tuple, esquina_scatter: tuple, pos_Pc : tuple, x_casa : int, y_casa : int, grupo_Paredes):
         super().__init__(x, y, Fantasma.velocidad_normal)
         self.nombre = nombre
         self.color = color
@@ -66,18 +66,29 @@ class Fantasma(Criatura):
             'ojos_abajo':     pg.transform.smoothscale(pg.image.load('fantasmas/Ojos/Ojos_abajo.png').convert_alpha(),     (TILE_SIZE, TILE_SIZE)),
         }
 
-    def definir_objetivo(self):
-        return self.esquina_scatter
+    def definir_objetivo(self)->None:
+     """Devuelve el objetivo al que va el fantasma
+      Retorna:
+        tupla : La posición objetivo del fantasma"""
+     return self.esquina_scatter
 
-    def alineado(self):
+    def alineado(self)->bool:
+        """Dice si el fantasma está justo alineado con el mapa
+        Retorna:
+        bool: True si está alineado con un tile y False si no"""
         cx = self.rect.x % TILE_SIZE
         cy = self.rect.y % TILE_SIZE
         return cx == 0 and cy == 0
 
-    def analizar_colisiones(self, tile_x, tile_y): # Esta funcion lo que hace es mirar las 4 casillas vecinas al fantasma y devolver cuales estan disponibles para moverse.
+    def analizar_colisiones(self, tile_x: int, tile_y: int) -> dict:  # Esta funcion lo que hace es mirar las 4 casillas vecinas al fantasma y devolver cuales estan disponibles para moverse.
+        """Revisa las 4 casillas vecinas y se fija si esta libres
+        Agrumentos:
+            Title_x: pocision x del fantasma 
+            title_y: pocision y del fantasma
+        Retorna:
+            direcciones_libres: dicionario con las direciones libres"""
         direcciones_libres = {}
         en_casa_o_saliendo = self.estado in ['saliendo', 'muerto'] or self.en_casa # Determinar si el fantasma esta adentro de la casa
-
         for direccion, (dx, dy) in direcciones_default.items(): # Recorrer las cuatro direcciones
             objx = tile_x + dx
             objy = tile_y + dy
@@ -96,7 +107,12 @@ class Fantasma(Criatura):
             direcciones_libres[direccion] = not col_pared and not col_puerta
         return direcciones_libres
 
-    def direcciones(self, objetivo):
+    def direcciones(self, objetivo: tuple)->str:
+        """elije la mejor direcion para movere dependiendo su objetivo
+        Argumentos:
+            objetivo: tupla con posicion del objetivo
+        Retorna:
+            mejores[0]: la mejor direcion de movimiento"""
         tile_x = self.rect.x // TILE_SIZE # Obtener el tile actual
         tile_y = self.rect.y // TILE_SIZE
 
@@ -145,7 +161,15 @@ class Fantasma(Criatura):
                 return p
         return mejores[0]
 
-    def estados(self):
+    def estados(self)->None:
+        """Maneja el comportamiendo de los fantasmas segun su estado
+        scatter: va hacia su esquina
+        chase: persuigue usando la logica de cada fantasma
+        muerto: vuelve a la ghost house
+        asustado: elije una direcion aleatoria
+        saliendo: no deside direcion ya que solo tiene una
+        Retorna:
+            None"""
         pos_actual = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
 
         if self.estado == 'scatter':
@@ -174,7 +198,11 @@ class Fantasma(Criatura):
             self.recien_salio = False
             
 
-    def activar_asustado(self):
+    def activar_asustado(self)->None:
+        """pone al fantasma en modo asustado
+        baja la velocidad de los fantasmas cambia su estado a asustado inverte su direcion y reincia el contador de tiempo del modo asustado
+        Retorna:
+           None"""
         if self.en_casa:
             return
         if self.estado in ['scatter', 'chase', 'asustado']:
@@ -185,7 +213,10 @@ class Fantasma(Criatura):
             self.tiempo_asustado = pg.time.get_ticks()
             self.ultimo_tile = (-1, -1) # Resetear ultimo tile
 
-    def asustado(self):
+    def asustado(self)->None:
+        """Elije una direcion disponible alazar cuando esta asustado
+        Retorna:
+            None"""
         pos_x = self.rect.x // TILE_SIZE
         pos_y = self.rect.y // TILE_SIZE
         posibles_direcciones = self.analizar_colisiones(pos_x, pos_y)
@@ -199,13 +230,20 @@ class Fantasma(Criatura):
         if direcciones_validas:
             self.direccion = random.choice(direcciones_validas)
 
-    def muerto(self):
+    def muerto(self)->None:
+        """cambia el estado de fantasma a muero dibujando solo sus ojos y dirijiendolos a la casa con mas velocidad 
+        Retorna:
+            None"""
         if self.estado != 'muerto':
             self.estado = 'muerto'
             self.velocidad = self.velocidad_ojos
             self.ultimo_tile = (-1, -1)
 
-    def alternar_estado(self):
+    def alternar_estado(self)->None:
+        """Cambia el estado de el fantasma segun el tiempo y la situacion 
+        controlando entre modo sactter y chase, cuando termina el modo asustado y que pasa con los fantasmas muertos cuando lluegan a la cas
+        Retorna:
+            None"""
         if self.estado == 'saliendo' or self.en_casa:
             return
         if self.estado == 'asustado':
@@ -247,7 +285,12 @@ class Fantasma(Criatura):
         else:
             self.estado = 'chase'
 
-    def mover_en_casa(self, dt):
+    def mover_en_casa(self, dt: float)->None:
+        """mueve el fantasma adentro de la casa
+        Argumentos:
+            dt: Tiempo que paso desde el ultimo frama en segundos
+        Retorna:
+            None"""
         velocidad = self.velocidad_normal * TILE_SIZE * dt
         self.yr += self.dir_bounce * velocidad
         self.rect.y = int(self.yr)
@@ -263,7 +306,12 @@ class Fantasma(Criatura):
             self.dir_bounce = -1
             self.direccion = 'arriba'
 
-    def mover(self, dt):
+    def mover(self, dt: float)->None:
+        """Mueve a los fantasmas dependindo las situaciones, salindo de la casa, cuando esta afuera y por los tuneles del mapa
+        Argumentos:
+           dt: tiempo que paso desde el ultimo frame en segurndos
+        Retorna:
+            None"""
         if self.estado == 'saliendo':
             velocidad = self.velocidad_normal * TILE_SIZE * dt
             if abs(self.rect.x - self.puerta_x) > 2:
@@ -317,7 +365,13 @@ class Fantasma(Criatura):
                 self.rect.x = int(self.xr)
                 self.rect.y = int(self.yr)
 
-    def reiniciar(self, x, y):
+    def reiniciar(self, x : int, y: int)-> None:
+        """reinica a los fantasmas a sus caracteristicas originales
+        Argumentos:
+            x: posicion del fantasma 
+            y: posicion del fantasma
+        Retorna:
+            None"""
         self.xr = float(x)
         self.yr = float(y)
         self.rect.topleft = (x, y)
@@ -333,7 +387,13 @@ class Fantasma(Criatura):
         self.tiempo_estado = pg.time.get_ticks()
         self.dir_bounce = -1
 
-    def Dibujar(self, pantalla):
+    def Dibujar(self, pantalla)->None:
+        """dibuja al fantasma en pantalla
+        cambia el sprite segun el estado acutual 
+        Argumentos:
+            pantalla: superficie donde se dibujan los fantasmas
+        Retorna:
+            None"""
         if pg.time.get_ticks() - self.tiempo_frame >= self.duracion_frame:
             if self.estado == 'asustado':
                 self.frame_actual = (self.frame_actual + 1) % 4
@@ -356,11 +416,14 @@ class Fantasma(Criatura):
 
 
 class Blinky(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x: int, y : int, nombre : str, color: tuple, esquina_scatter: tuple, pos_Pc: tuple, x_casa: int, y_casa : int, grupo_Paredes)->None:
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.sprites = self._cargar_sprites()
 
-    def _cargar_sprites(self):
+    def _cargar_sprites(self)->dict:
+        """Carga los sprites de Blinky devuelve cada direccion con dos imagenes cada una que se alternan
+        Retorna:
+            None"""
         return {
             'derecha': [
                 pg.transform.smoothscale(pg.image.load('fantasmas/Blinky/Arcade - Pac-Man - General Sprites - Blinky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
@@ -380,10 +443,22 @@ class Blinky(Fantasma, pg.sprite.Sprite):
             ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->tuple:
+        """define a donde quiere ir blinky 
+        blinky se dirije a donde va pacman
+        Retorna:
+            None"""
         return self.pos_Pc
 
-    def ejecutar(self, pos_Pc, dt):
+    def ejecutar(self, pos_Pc: tuple, dt : int)->None:
+        """Actualiza a blinky cada frame
+        si esta en la casa la mueve en ella si ya salio actualiza la posicion de pacman,
+        cambia de esatdo si coresponde, decide direciones y se mueve
+        Argumentos:
+           pos_Pc: tupla con la posicion actual de pacman
+           dt: Tiempo que paso desde el ultimo frame en segundos
+        Retorna:
+            None"""
         if self.en_casa:
             self.mover_en_casa(dt)
             return
@@ -394,12 +469,15 @@ class Blinky(Fantasma, pg.sprite.Sprite):
 
 
 class Pinky(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x : int, y: int, nombre : str, color : tuple, esquina_scatter: tuple, pos_Pc : tuple, dir_pc : str, x_casa : int, y_casa : int, grupo_Paredes)->None:
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.dir_pc = dir_pc
         self.sprites = self._cargar_sprites()
 
-    def _cargar_sprites(self):
+    def _cargar_sprites(self)->None:
+        """Carga los sprites de pinky devuelve cada direccion con dos imagenes cada una que se alternan
+        Retorna:
+            None"""
         return {
             'derecha': [
                 pg.transform.smoothscale(pg.image.load('fantasmas/Pinky/Arcade - Pac-Man - General Sprites - Pinky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
@@ -419,13 +497,26 @@ class Pinky(Fantasma, pg.sprite.Sprite):
             ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->tuple:
+        """define el objetivo de pinky
+        pinky se dirije a los titles delante de pacman segun en la direcion a la que se mueva 
+        Retorna:
+            Tupla con el objetivo de pinky"""
         dx, dy = direcciones_default.get(self.dir_pc, (0, 0))
         if self.dir_pc == 'arriba':
             return (self.pos_Pc[0] - 4 * TILE_SIZE, self.pos_Pc[1] - 4 * TILE_SIZE)
         return (self.pos_Pc[0] + dx * 4 * TILE_SIZE, self.pos_Pc[1] + dy * 4 * TILE_SIZE)
 
-    def ejecutar(self, pos_Pc, dir_pc, dt):
+    def ejecutar(self, pos_Pc: tuple, dir_pc: str, dt: int)->None:
+        """Actualiza a pinky cada frame
+        si esta en la casa la mueve en ella si ya salio actualiza el objetivo,
+        cambia de esatdo si coresponde, decide direciones y se mueve
+        Argumentos:
+           pos_Pc: tupla con la posicion actual de pacman
+           dir_pc: direcion a la que se dirije pacman
+           dt: Tiempo que paso desde el ultimo frame en segundos
+        Retorna:
+            None"""
         if self.en_casa:
             self.mover_en_casa(dt)
             return
@@ -437,11 +528,14 @@ class Pinky(Fantasma, pg.sprite.Sprite):
 
 
 class Clyde(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x : int, y : int, nombre : str, color : tuple, esquina_scatter : tuple, pos_Pc : tuple, x_casa : int, y_casa : int, grupo_Paredes)->None:
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.sprites = self._cargar_sprites()
 
-    def _cargar_sprites(self):
+    def _cargar_sprites(self)->dict:
+        """Carga los sprites de clayde devuelve cada direccion con dos imagenes cada una que se alternan
+        Retorna:
+            None"""
         return {
             'derecha': [
                 pg.transform.smoothscale(pg.image.load('fantasmas/Clyde/Arcade - Pac-Man - General Sprites - Clyde (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
@@ -461,14 +555,26 @@ class Clyde(Fantasma, pg.sprite.Sprite):
             ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->tuple:
+        """define a donde quiere ir clayde Persuigue 
+        clayde persuigue a pacman si esta lejos si se acerca demasiado vuelve a su esquina scatter
+        Retrona:
+            tupla con el objetivo de clayde"""
         dist_x = (self.pos_Pc[0] - self.rect.x) // TILE_SIZE
         dist_y = (self.pos_Pc[1] - self.rect.y) // TILE_SIZE
         if (dist_x ** 2 + dist_y ** 2) > 64:
             return self.pos_Pc
         return self.esquina_scatter
 
-    def ejecutar(self, pos_Pc, dt):
+    def ejecutar(self, pos_Pc : tuple, dt : int)->None:
+        """Actualiza a clayde cada frame
+        si esta en la casa la mueve en ella si ya salio actualiza el objetivo,
+        cambia de esatdo si coresponde, decide direciones y se mueve
+        Argumentos:
+           pos_Pc: tupla con la posicion actual de pacman
+           dt: Tiempo que paso desde el ultimo frame en segundos
+        Retorna:
+            None"""
         if self.en_casa:
             self.mover_en_casa(dt)
             return
@@ -479,13 +585,16 @@ class Clyde(Fantasma, pg.sprite.Sprite):
 
 
 class Inky(Fantasma, pg.sprite.Sprite):
-    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, blinky, x_casa, y_casa, grupo_Paredes):
+    def __init__(self, x : int, y : int, nombre : str, color: tuple, esquina_scatter : tuple, pos_Pc: tuple, dir_pc : str, blinky: Blinky, x_casa : int, y_casa : int, grupo_Paredes)->None:
         super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
         self.dir_pc = dir_pc
         self.blinky = blinky
         self.sprites = self._cargar_sprites()
 
-    def _cargar_sprites(self):
+    def _cargar_sprites(self)->dict:
+        """Carga los sprites de inky devuelve cada direccion con dos imagenes cada una que se alternan
+        Retorna:
+            None"""
         return {
             'derecha': [
                 pg.transform.smoothscale(pg.image.load('fantasmas/Inky/Arcade - Pac-Man - General Sprites - Inky (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
@@ -505,7 +614,11 @@ class Inky(Fantasma, pg.sprite.Sprite):
             ],
         }
 
-    def definir_objetivo(self):
+    def definir_objetivo(self)->tuple:
+        """define donde quiere ir inky 
+        primero toma dos punto delante de pacman despues usa el objetivo de blinky para caulcular el objetivo proyectado
+        Retorna: 
+            None"""
         dx, dy = direcciones_default.get(self.dir_pc, (0, 0))
         if self.dir_pc == 'arriba':
             p_x = self.pos_Pc[0] - 2 * TILE_SIZE
@@ -521,7 +634,15 @@ class Inky(Fantasma, pg.sprite.Sprite):
 
         return (b_x + 2 * (p_x - b_x), b_y + 2 * (p_y - b_y))
 
-    def ejecutar(self, pos_Pc, dir_pc, dt):
+    def ejecutar(self, pos_Pc: tuple, dir_pc : str, dt : int):
+        """Actualiza a inky cada frame
+        si esta en la casa la mueve en ella si ya salio actualiza el objetivo,
+        cambia de esatdo si coresponde, decide direciones y se mueve
+        Argumentos:
+           pos_Pc: tupla con la posicion actual de pacman
+           dt: Tiempo que paso desde el ultimo frame en segundos
+        Retorna:
+            None"""
         if self.en_casa:
             self.mover_en_casa(dt)
             return
@@ -640,6 +761,8 @@ class Patrullero(Fantasma, pg.sprite.Sprite):
         self.alternar_estado()
         self.estados()
         self.mover(dt)
+
+        
         
 
 
