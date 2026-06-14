@@ -26,75 +26,42 @@ pg.init()
 pg.mixer.init()
 pg.font.init()
 
-
 pantalla = pg.display.set_mode((ANCHO, ALTO))
 pg.display.set_caption("Test Pac-Man")
-
 HUD.cargar_frutas_hud()
-
 mapa_surface = pg.Surface((MAPA_ANCHO, MAPA_ALTO))
-
 reloj = pg.time.Clock()
 fuente = pg.font.SysFont("Courier", 30, bold=True)
-
 mapa = Cargar_Mapa("mapa.txt")
-
-grupo_paredes, grupo_puntos, Pos_Pm, Puertas, Spawns = Dibujar_Mapa(
-    mapa_surface,
-    mapa,
-    TILE_SIZE
-)
-
-pacman = PacMan(
-    Pos_Pm[0] + TILE_SIZE // 2,
-    Pos_Pm[1] + TILE_SIZE // 2
-)
-
+grupo_paredes, grupo_puntos, Pos_Pm, Puertas, Spawns = Dibujar_Mapa(mapa_surface,mapa,TILE_SIZE)
+pacman = PacMan(Pos_Pm[0] + TILE_SIZE // 2, Pos_Pm[1] + TILE_SIZE // 2)
 pacman.cargar_frames_muerte()
-
 high_score = HUD.cargar_high_score()
-
 grupo_frutas = pg.sprite.Group()
 grupo_puntos_flotantes = pg.sprite.Group()
-
 intermission = Intermission()
 nivel_intermission_actual = 3
-
 nivel = 1
 contador_puntos_comidos = 0
 frutas_aparecidas = 0
-
-POS_FRUTA = (
-    MAPA_ANCHO // 2,
-    17 * TILE_SIZE + TILE_SIZE // 2
-)
-
+POS_FRUTA = (MAPA_ANCHO // 2, 17 * TILE_SIZE + TILE_SIZE // 2)
 estado_juego = "ready"
 tiempo_inicio_estado = 0
-
 duracion_pausa_nivel = 1000
 duracion_flash_mapa = 3000
 duracion_ready_sin_sonido = 2000
-
 Tiempo = 0
-Duracion_GO = 3000
+Duracion_GO = 3000 # Game Over
 contando = False
-
 tiempo_freeze = 0
 fantasma_comido = None
-
 sonido_inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
 canal_inicio = None
 
-def cambiar_color_paredes(grupo_paredes, color):
+def cambiar_color_paredes(grupo_paredes, color): # Esta función es para el flash de paredes cuando se termina el nivel
     for pared in grupo_paredes:
         pared.image.fill((0, 0, 0))
-        pg.draw.rect(
-            pared.image,
-            color,
-            pared.image.get_rect(),
-            1
-        )
+        pg.draw.rect(pared.image,color,pared.image.get_rect(),1)
 
 def iniciar_intermission_por_nivel(nivel_a_probar):
     intermission.cargar_frames_intermission_1(nivel_a_probar)
