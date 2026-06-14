@@ -13,9 +13,9 @@ direcciones_default = {
 opuesto = {'derecha': 'izquierda', 'izquierda': 'derecha', 'arriba': 'abajo', 'abajo': 'arriba'}
 
 class Fantasma(Criatura):
-    velocidad_normal = 3.75
-    velocidad_asustado = 2.50
-    velocidad_ojos = 5.00
+    velocidad_normal = (7.5 * 0.75)
+    velocidad_asustado = (7.5 * 0.50)
+    velocidad_ojos = (7.5 * 1.5)
 
     def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
         super().__init__(x, y, Fantasma.velocidad_normal)
@@ -51,6 +51,7 @@ class Fantasma(Criatura):
         self.forzar_random_hasta = 0
         self.bounce_limite_sup = y_casa - TILE_SIZE
         self.bounce_limite_inf = y_casa + TILE_SIZE
+        self.sonido_muerte = pg.mixer.Sound("sonidos_pacman/eat_ghost.wav")
 
         self.sprites_compartidos = {
             'asustado': [
