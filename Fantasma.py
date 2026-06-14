@@ -604,7 +604,57 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         self.historial.clear()
         self.objetivo = self.pos_Pc
 
+class Patrullero(Fantasma, pg.sprite.Sprite):
+    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes):
+        super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
+        self.ruta = [(14*TILE_SIZE, 5*TILE_SIZE),   # arriba centro
+        (23*TILE_SIZE, 14*TILE_SIZE),  # derecha centro
+        (14*TILE_SIZE, 26*TILE_SIZE),  # abajo centro
+        (4*TILE_SIZE, 14*TILE_SIZE)    # izquierda centro
+        ]
+        self.punto_actual = 0 # Posicion de la lista de ruta
+        self.sprites = self._cargar_sprites()
+
+    def _cargar_sprites(self):
+        return {
+            'derecha': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_derecha_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_derecha_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'izquierda': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_izquierda_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_izquierda_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'arriba': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_arriba_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_arriba_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'abajo': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_abajo_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_abajo_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+        }
+
+    def definir_objetivo(self):
+        objetivo = self.ruta[self.punto_actual] # Obtener el objetivo
+        dist_x = (objetivo[0] - self.rect.x) // TILE_SIZE
+        dist_y = (objetivo[1] - self.rect.y) // TILE_SIZE # Calcular la distancia
         
+        if dist_x ** 2 + dist_y ** 2 <= 1: # Ver si llego al objetivo
+            self.punto_actual = (self.punto_actual + 1) % len(self.ruta) # Pasar al siguiente punto
+            objetivo = self.ruta[self.punto_actual] # Actualizar objetivo
+
+        return objetivo
+
+    def ejecutar(self, pos_Pc, dt):
+        if self.en_casa:
+            self.mover_en_casa(dt)
+            return
+
+        self.pos_Pc = pos_Pc
+        self.alternar_estado()
+        self.estados()
+        self.mover(dt)
         
 
 
