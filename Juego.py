@@ -6,7 +6,7 @@ from Frutas import Frutas
 from Intermissions import Intermission
 from entidades import TILE_SIZE
 from Menu import menu_inicio
-from Fantasma import Blinky, Pinky, Clyde, Inky
+from Fantasma import Blinky, Pinky, Clyde, Inky , Tracer
 
 class PuntosFlotantes(pg.sprite.Sprite):
     """Muestra los puntos obtenidos al comer un fantasma, igual que Frutas."""
@@ -91,19 +91,22 @@ esquinas_scatters = {
     "Inferior Izquierda": (0, MAPA_ALTO),
     "Inferior Derecha":   (MAPA_ANCHO, MAPA_ALTO)
 }
-
+Patrullero = "lol"
 fantasmas = {
     1: ('Blinky', Blinky),
     2: ('Pinky', Pinky),
     3: ('Inky', Inky),
-    4: ('Clyde', Clyde)
+    4: ('Clyde', Clyde),
+    5: ("Tracer",Tracer),
+    6 : ("Patrullero",Patrullero)
 }
 
 colores = {
     1: (255, 0, 0),
     2: (255, 184, 255),
     3: (0, 255, 255),
-    4: (255, 184, 82)
+    4: (255, 184, 82),
+    5: (50,50,50)
 }
 
 puntos_fantasmas = [200,400,800,1600]
@@ -140,6 +143,8 @@ def incorporar_fantasmas(id_elegido, esquinas_elegidas, spawns, grupo_paredes):
             f = Pinky(x, y, nombre, color, esquina_scatter, pos_Pc, pacman.direccion, x_casa, y_casa, grupo_paredes)
         elif clase == Inky:
             f = Inky(x, y, nombre, color, esquina_scatter, pos_Pc, pacman.direccion, blinky_ref, x_casa, y_casa, grupo_paredes)
+        elif clase == Tracer:
+            f = Tracer (x,y,Tracer,(50,50,50),esquina_scatter,pos_Pc,pacman.direccion ,x_casa,y_casa,grupo_paredes)
         lista_fantasmas.append(f)
     return lista_fantasmas
 
@@ -284,7 +289,7 @@ while jugando:
 
             if not en_freeze:
                 for fantasma in fantasmas_juego:
-                    if type(fantasma) == Pinky or type(fantasma) == Inky:
+                    if type(fantasma) == Pinky or type(fantasma) == Inky or type(fantasma) == Tracer:
                         fantasma.ejecutar((int(pacman.x), int(pacman.y)), pacman.direccion, dt)
                     else:
                         fantasma.ejecutar((int(pacman.x), int(pacman.y)), dt)
