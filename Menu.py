@@ -23,7 +23,7 @@ FANTASMAS = [
     {"id": 3, "nombre": "Inky", "color": CELESTE, "desc": "- El flanqueador."},
     {"id": 4, "nombre": "Clyde", "color": NARANJA, "desc": "- El tímido."},
     {"id": 5, "nombre": "Tracer", "color": GRIS_O, "desc": "- La sombra"},
-    {"id": 6, "nombre": "Spark", "color": AMARILLO, "desc": "- El doble cara"}
+    {"id": 6, "nombre": "Patrullero", "color": AMARILLO, "desc": "- El centinela"}
 ]
 
 

@@ -6,7 +6,7 @@ from Frutas import Frutas
 from Intermissions import Intermission
 from entidades import TILE_SIZE
 from Menu import menu_inicio
-from Fantasma import Blinky, Pinky, Clyde, Inky
+from Fantasma import Blinky, Pinky, Clyde, Inky, Tracer, Patrullero
 
 class PuntosFlotantes(pg.sprite.Sprite):
     """Muestra los puntos obtenidos al comer un fantasma, igual que Frutas."""
@@ -56,7 +56,7 @@ contando = False
 tiempo_freeze = 0
 fantasma_comido = None
 sonido_inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
-sonido_fantasma = pg.mixer.Sound("sonidos_pacman/start.wav")
+sonido_fantasma = pg.mixer.Sound("sonidos_pacman/eat_ghost.wav")
 canal_inicio = None
 
 def cambiar_color_paredes(grupo_paredes, color): # Esta función es para el flash de paredes cuando se termina el nivel
@@ -96,14 +96,18 @@ fantasmas = {
     1: ('Blinky', Blinky),
     2: ('Pinky', Pinky),
     3: ('Inky', Inky),
-    4: ('Clyde', Clyde)
+    4: ('Clyde', Clyde),
+    5: ('Tracer', Tracer),
+    6: ('Patrullero', Patrullero)
 }
 
 colores = {
     1: (255, 0, 0),
     2: (255, 184, 255),
     3: (0, 255, 255),
-    4: (255, 184, 82)
+    4: (255, 184, 82),
+    5: (50, 50, 50),
+    6: (255, 255, 0)
 }
 
 puntos_fantasmas = [200,400,800,1600]
@@ -140,6 +144,10 @@ def incorporar_fantasmas(id_elegido, esquinas_elegidas, spawns, grupo_paredes):
             f = Pinky(x, y, nombre, color, esquina_scatter, pos_Pc, pacman.direccion, x_casa, y_casa, grupo_paredes)
         elif clase == Inky:
             f = Inky(x, y, nombre, color, esquina_scatter, pos_Pc, pacman.direccion, blinky_ref, x_casa, y_casa, grupo_paredes)
+        elif clase == Tracer:
+            f = Tracer(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_paredes)
+        elif clase == Patrullero:
+            f = Patrullero(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_paredes)
         lista_fantasmas.append(f)
     return lista_fantasmas
 
