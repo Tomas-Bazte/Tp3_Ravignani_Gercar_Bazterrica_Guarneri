@@ -56,6 +56,7 @@ contando = False
 tiempo_freeze = 0
 fantasma_comido = None
 sonido_inicio = pg.mixer.Sound("sonidos_pacman/start.wav")
+sonido_fantasma = pg.mixer.Sound("sonidos_pacman/start.wav")
 canal_inicio = None
 
 def cambiar_color_paredes(grupo_paredes, color): # Esta función es para el flash de paredes cuando se termina el nivel
@@ -298,6 +299,7 @@ while jugando:
                                 fantasma.muerto()
                                 pacman.sumar_puntos(pts)
                                 fantasmas_comidos += 1
+                                sonido_fantasma.play()
                                 pf = PuntosFlotantes(fantasma.rect.centerx, fantasma.rect.centery, pts)
                                 grupo_puntos_flotantes.add(pf)
                                 tiempo_freeze = pg.time.get_ticks()
