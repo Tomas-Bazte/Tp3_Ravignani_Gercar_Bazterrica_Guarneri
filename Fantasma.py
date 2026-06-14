@@ -563,23 +563,11 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         }
 
     def definir_objetivo(self):
-
         distancia = abs(self.objetivo[0] - self.rect.x) + abs(self.objetivo[1] - self.rect.y)
-
-        
-
-
-
         if distancia < TILE_SIZE * 4:
 
             return self.pos_Pc
-
-            
-
         return self.objetivo
-
-
-
     def ejecutar(self, pos_Pc, dir_pc, dt):
         self.pos_Pc = pos_Pc
         self.dir_pc = dir_pc

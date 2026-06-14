@@ -6,7 +6,7 @@ from Frutas import Frutas
 from Intermissions import Intermission
 from entidades import TILE_SIZE
 from Menu import menu_inicio
-from Fantasma import Blinky, Pinky, Clyde, Inky , Tracer
+from Fantasma import Blinky, Pinky, Clyde, Inky , Tracer, Patrullero
 
 class PuntosFlotantes(pg.sprite.Sprite):
     """Muestra los puntos obtenidos al comer un fantasma, igual que Frutas."""
@@ -91,14 +91,14 @@ esquinas_scatters = {
     "Inferior Izquierda": (0, MAPA_ALTO),
     "Inferior Derecha":   (MAPA_ANCHO, MAPA_ALTO)
 }
-Patrullero = "lol"
+
 fantasmas = {
     1: ('Blinky', Blinky),
     2: ('Pinky', Pinky),
     3: ('Inky', Inky),
     4: ('Clyde', Clyde),
     5: ("Tracer",Tracer),
-    6 : ("Patrullero",Patrullero)
+    6 : ("Patrullero", Patrullero)
 }
 
 colores = {
@@ -106,7 +106,8 @@ colores = {
     2: (255, 184, 255),
     3: (0, 255, 255),
     4: (255, 184, 82),
-    5: (50,50,50)
+    5: (50,50,50),
+    6: (255, 255, 0)
 }
 
 puntos_fantasmas = [200,400,800,1600]
@@ -145,7 +146,10 @@ def incorporar_fantasmas(id_elegido, esquinas_elegidas, spawns, grupo_paredes):
             f = Inky(x, y, nombre, color, esquina_scatter, pos_Pc, pacman.direccion, blinky_ref, x_casa, y_casa, grupo_paredes)
         elif clase == Tracer:
             f = Tracer (x,y,Tracer,(50,50,50),esquina_scatter,pos_Pc,pacman.direccion ,x_casa,y_casa,grupo_paredes)
+        elif clase == Patrullero:
+            f = Patrullero(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_paredes)
         lista_fantasmas.append(f)
+        
     return lista_fantasmas
 
 fantasmas_juego = incorporar_fantasmas(Fantasmas, Esquinas, Spawns, grupo_paredes)
