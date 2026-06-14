@@ -545,20 +545,20 @@ class Tracer (Fantasma,pg.sprite.Sprite):
     def _cargar_sprites(self):
         return {
             'derecha': [
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Right 1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Right 2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
             ],
             'izquierda': [
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Left 1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Left 2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
             ],
             'arriba': [
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Up 1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Up 2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
             ],
             'abajo': [
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
-                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Down 1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer Down 2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
             ],
         }
 
