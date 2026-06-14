@@ -171,6 +171,7 @@ class Fantasma(Criatura):
             self.ultimo_tile = pos_actual
             self.direccion = self.direcciones(objetivo)
             self.recien_salio = False
+            
 
     def activar_asustado(self):
         if self.en_casa:
@@ -287,6 +288,8 @@ class Fantasma(Criatura):
                     self.recien_salio = True
                     self.tiempo_estado = pg.time.get_ticks()
             return
+
+    
 
         dx, dy = direcciones_default[self.direccion]
         self.xr += dx * self.velocidad * TILE_SIZE * dt
@@ -526,3 +529,54 @@ class Inky(Fantasma, pg.sprite.Sprite):
         self.alternar_estado()
         self.estados()
         self.mover(dt)
+
+
+class Tracer (Fantasma,pg.sprite.Sprite):
+    def __init__(self, x, y, nombre, color, esquina_scatter, pos_Pc, dir_pc, x_casa, y_casa, grupo_Paredes):
+        super().__init__(x, y, nombre, color, esquina_scatter, pos_Pc, x_casa, y_casa, grupo_Paredes)
+        self.Turno = int(self.tiempo_estado - 1000)
+        self.dir_pc = dir_pc
+        self.historial = []
+        self.objetivo = pos_Pc
+        self.retraso = 200
+        self.sprites = self._cargar_sprites()
+
+    def _cargar_sprites(self):
+        return {
+            'derecha': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Right)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Right)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'izquierda': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Left)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Left)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'arriba': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Up)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Up)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+            'abajo': [
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Down)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+                pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Arcade - Pac-Man - General Sprites - Tracer (Down)_frame_2.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
+            ],
+        }
+
+    def ejecutar (self,dt):
+        self.historial.append(self.pos_Pc)
+        if len( self.historial) >= self.retraso:
+            self.objetivo = self.historial.pop (0)
+
+
+        if self.en_casa:
+            self.mover_en_casa(dt)
+            return
+        self.alternar_estado()
+        self.estados()
+        self.mover(dt)
+
+        
+        
+
+
+
+
