@@ -74,21 +74,21 @@ class Fantasma(Criatura):
         cy = self.rect.y % TILE_SIZE
         return cx == 0 and cy == 0
 
-    def analizar_colisiones(self, tile_x, tile_y):
+    def analizar_colisiones(self, tile_x, tile_y): # Esta funcion lo que hace es mirar las 4 casillas vecinas al fantasma y devolver cuales estan disponibles para moverse.
         direcciones_libres = {}
-        en_casa_o_saliendo = self.estado in ['saliendo', 'muerto'] or self.en_casa
+        en_casa_o_saliendo = self.estado in ['saliendo', 'muerto'] or self.en_casa # Determinar si el fantasma esta adentro de la casa
 
-        for direccion, (dx, dy) in direcciones_default.items():
+        for direccion, (dx, dy) in direcciones_default.items(): # Recorrer las cuatro direcciones
             objx = tile_x + dx
             objy = tile_y + dy
-            if direccion == 'arriba' and self.estado not in ['muerto', 'asustado'] and not self.recien_salio:
-                if (objy == 10 or objy == 22) and (11 <= objx <= 16):
-                    direcciones_libres[direccion] = False
+            if direccion == 'arriba' and self.estado not in ['muerto', 'asustado'] and not self.recien_salio: # Restriccion especial de la ghost house
+                if (objy == 10 or objy == 22) and (11 <= objx <= 16): # Zona prohibida
+                    direcciones_libres[direccion] = False # Si intentan subir aca quedan "bloqueados"
                     continue
 
-            rect_prueba = pg.Rect(objx * TILE_SIZE, objy * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            rect_prueba = pg.Rect(objx * TILE_SIZE, objy * TILE_SIZE, TILE_SIZE, TILE_SIZE) # Rect de prueba
 
-            col_pared = bool(rect_prueba.collideobjects(self.grupo_Paredes.sprites()))
+            col_pared = bool(rect_prueba.collideobjects(self.grupo_Paredes.sprites())) # Ver si chocaria con una pared
             col_puerta = False
             if not en_casa_o_saliendo and hasattr(self, 'grupo_Puertas'):
                 col_puerta = bool(rect_prueba.collideobjects(self.grupo_Puertas.sprites()))
@@ -97,48 +97,48 @@ class Fantasma(Criatura):
         return direcciones_libres
 
     def direcciones(self, objetivo):
-        tile_x = self.rect.x // TILE_SIZE
+        tile_x = self.rect.x // TILE_SIZE # Obtener el tile actual
         tile_y = self.rect.y // TILE_SIZE
 
-        direcciones_libres = self.analizar_colisiones(tile_x, tile_y)
-        posibles_posiciones = {}
+        direcciones_libres = self.analizar_colisiones(tile_x, tile_y) # Ver qué caminos están disponibles
+        posibles_posiciones = {} # Calcular distancia al objetivo desde cada posible movimiento
 
-        for direccion, disponible in direcciones_libres.items():
+        for direccion, disponible in direcciones_libres.items(): # Recorrer las direcciones
             if not disponible or direccion == opuesto[self.direccion]:
                 continue
-            dx, dy = direcciones_default[direccion]
+            dx, dy = direcciones_default[direccion] # Simular el siguiente tile
             proximo_tile_x = tile_x + dx
             proximo_tile_y = tile_y + dy
             dist_x = (objetivo[0] // TILE_SIZE) - proximo_tile_x
             dist_y = (objetivo[1] // TILE_SIZE) - proximo_tile_y
-            posibles_posiciones[direccion] = dist_x ** 2 + dist_y ** 2
+            posibles_posiciones[direccion] = dist_x ** 2 + dist_y ** 2 # Medir distancia al objetivo, distancia euclidiana
 
-        if not posibles_posiciones:
+        if not posibles_posiciones: # Si no hay opciones, vuelve
             return opuesto[self.direccion]
 
         dist_actual = (((objetivo[0] // TILE_SIZE) - tile_x) ** 2 +
-                       ((objetivo[1] // TILE_SIZE) - tile_y) ** 2)
+                       ((objetivo[1] // TILE_SIZE) - tile_y) ** 2) # Distancia actual al objetivo
 
-        if dist_actual < self.mejor_dist_objetivo:
+        if dist_actual < self.mejor_dist_objetivo: # Ver si esta progresando
             self.mejor_dist_objetivo = dist_actual
             self.tiempo_sin_progreso = pg.time.get_ticks()
 
         ahora = pg.time.get_ticks()
         en_modo_random = ahora < self.forzar_random_hasta
 
-        if not en_modo_random and ahora - self.tiempo_sin_progreso > 3000:
+        if not en_modo_random and ahora - self.tiempo_sin_progreso > 3000: # Si durante 3 segundos no consiguio acercarse al objetivo:
             self.tiempo_sin_progreso = ahora
             self.mejor_dist_objetivo = float('inf')
             self.forzar_random_hasta = ahora + 2000
             en_modo_random = True
 
-        if en_modo_random:
+        if en_modo_random: # Scatter
             dirs_libres = [d for d, libre in direcciones_libres.items() if libre and d != opuesto[self.direccion]]
             if dirs_libres:
                 return random.choice(dirs_libres)
 
         prioridad = ['arriba', 'izquierda', 'abajo', 'derecha']
-        min_dist = min(posibles_posiciones.values())
+        min_dist = min(posibles_posiciones.values()) # Elegir la mejor direccion
         mejores = [d for d, dist in posibles_posiciones.items() if dist == min_dist]
         for p in prioridad:
             if p in mejores:
@@ -179,10 +179,10 @@ class Fantasma(Criatura):
         if self.estado in ['scatter', 'chase', 'asustado']:
             self.estado = 'asustado'
             self.velocidad = self.velocidad_asustado
-            self.direccion = opuesto[self.direccion]
+            self.direccion = opuesto[self.direccion] # Invierte la direccion
             self.frame_actual = 0
             self.tiempo_asustado = pg.time.get_ticks()
-            self.ultimo_tile = (-1, -1)
+            self.ultimo_tile = (-1, -1) # Resetear ultimo tile
 
     def asustado(self):
         pos_x = self.rect.x // TILE_SIZE
@@ -323,7 +323,7 @@ class Fantasma(Criatura):
         self.en_casa = True
         self.estado_actual = 0
         self.ultimo_tile = (-1, -1)
-        self.mejor_dist_objetivo = float('inf')
+        self.mejor_dist_objetivo = float('inf') # crea un numero especial que es mas grande que cualquier otro numero.
         self.tiempo_sin_progreso = pg.time.get_ticks()
         self.forzar_random_hasta = 0
         self.recien_salio = False
