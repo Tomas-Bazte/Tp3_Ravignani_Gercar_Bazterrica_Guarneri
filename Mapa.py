@@ -12,7 +12,8 @@ ANCHO = MAPA_ANCHO
 ALTO = HUD_ARRIBA + MAPA_ALTO + HUD_ABAJO
 
 def Cargar_Mapa(Ruta: str) -> list:
-    """Parametros:
+    """carga un archivo TXT y lo convierte en una lista
+    Parametros:
                    Ruta -> es donde se encuntra el archivo de texto
         Retorna: 
                    Mapa -> es el texto abierto y convertido en matriz"""
@@ -21,7 +22,7 @@ def Cargar_Mapa(Ruta: str) -> list:
        return Mapa
 
 class pared (pg.sprite.Sprite):
-    def __init__(self,x,y,tamaño):
+    def __init__(self,x: int,y : int,tamaño: int)->None:
         super().__init__()
         self.image = pg.Surface((tamaño,tamaño))
         self.image.fill((0,0,0))
@@ -31,7 +32,7 @@ class pared (pg.sprite.Sprite):
 
 
 class puntitos (pg.sprite.Sprite):
-    def __init__ (self,x,y,Super=False,tile_size=18):
+    def __init__ (self,x : int,y :int,Super=False,tile_size=18)->None:
         super().__init__()
         self.es_power_pellet = Super
         radio = (int(tile_size//4) if Super else int(tile_size//8))
@@ -41,7 +42,10 @@ class puntitos (pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (int(x+(tile_size//2)),int(y+(tile_size//2)))
     
-    def flash_power_pellet(self):
+    def flash_power_pellet(self) -> None:
+        """Hace parpadear un power pellet 
+        Retorna:
+           None"""
         if self.es_power_pellet:
             tiempo = pg.time.get_ticks()
             if (tiempo // 200) % 2 == 0:
@@ -54,7 +58,7 @@ class tuneles (pg.sprite.Sprite):
         super().__init__()
 
 class Puerta_H (pg.sprite.Sprite):
-    def __init__(self,x,y,tamaño):
+    def __init__(self,x : int,y : int,tamaño : int):
         super().__init__()
         self.image = pg.Surface((tamaño,tamaño),pg.SRCALPHA)
         self.rect = self.image.get_rect()
@@ -63,6 +67,18 @@ class Puerta_H (pg.sprite.Sprite):
 
 
 def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 18) -> None:
+    """Recorre el mapa y dibuja los sprites corespondientes 
+    Segun los caracteres del mapa crea, paredes, puntos, power pellets, spawn de pacman y fantasmas y ghoast house
+    Argumentos:
+        pantalla: Superficie donde transcurre el juego
+        Mapa: lista de strings que representa el mapa del juego
+        Tamaño_casillero: Tamaño de cada casillero del mapa en pixeles 
+    Retorna:
+        grupo_paredes:Grupo de sprites que representan las paredes del mapa
+        Grupo_puntos: Grupo de sprites que representan los puntos y power pellets
+        pos_Pm: Pocicion inicial de pacman
+        Puerta: grupo de sprites que represenatn las puertas
+        Spawns: lista con las pocisiones donde aparecen lso fantasmans"""
     grupo_Paredes = pg.sprite.Group()
     grupo_puntos = pg.sprite.Group()
     Puerta = pg.sprite.Group()
@@ -91,17 +107,32 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 18) -> None:
                 
     return grupo_Paredes, grupo_puntos, Pos_Pm , Puerta, Spawns
 
-def cambiar_color(self, color): # Funcion que sirve para cambiar el color del mapa de azul a blanco cuanto termine el nivel.
+def cambiar_color(self, color: tuple)->None: # Funcion que sirve para cambiar el color del mapa de azul a blanco cuanto termine el nivel.
+    """Cambia el polor de los bares de la pared
+    Argumentos:
+        Color: tupla con los valores RGB
+    Retorna:
+        None"""
     self.image.fill((0, 0, 0))
     pg.draw.rect(self.image,color,self.image.get_rect(),1)
     
-def dibujar_ready(mapa_surface):
+def dibujar_ready(mapa_surface)->None:
+    """Dibuja el texto 'Ready' al inicio de la partida en el sentro del mapa
+    Argumentos:
+        mapa_surface: superficie donde se dibuja el mapa
+    Retrona: 
+        None"""
     fuente_ready = pg.font.SysFont("Courier", 19, bold=True)
     texto = fuente_ready.render("READY!",True,(255, 255, 0))
     rect = texto.get_rect(center=(MAPA_ANCHO // 2, 17.5 * TILE_SIZE)) # El 17.5 * Tile size fui probando hasta que quedo justo en el medio
     mapa_surface.blit(texto, rect)
 
-def dibujar_game_over(mapa_surface):
+def dibujar_game_over(mapa_surface)->None:
+    """Dibuja el texto "Game Over" se usa cuando termina la partida
+    Argumentos:
+        Mapa_surface: superficie donde se dibuja el mapa
+    Retorna:
+        None"""
     fuente_game_over = pg.font.SysFont("Courier", 16, bold=True)
     texto = fuente_game_over.render("GAME  OVER",True,(255, 0, 0))
     rect = texto.get_rect(center=(MAPA_ANCHO // 2, 17.5 * TILE_SIZE))
