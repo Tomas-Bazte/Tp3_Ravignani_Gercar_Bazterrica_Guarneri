@@ -539,7 +539,7 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         self.dir_pc = dir_pc
         self.historial = []
         self.objetivo = pos_Pc
-        self.retraso = 60
+        self.retraso = 60 # Pacman desde hace 60 frames
         self.sprites = self._cargar_sprites()
 
     def _cargar_sprites(self):
@@ -563,30 +563,27 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         }
 
     def definir_objetivo(self):
-        distancia = abs(self.objetivo[0] - self.rect.x) + abs(self.objetivo[1] - self.rect.y)
-        if distancia < TILE_SIZE * 4:
-
+        dist_x = abs(self.objetivo[0] - self.rect.x)
+        dist_y = abs(self.objetivo[1] - self.rect.y)
+        if (dist_x + dist_y) < (TILE_SIZE * 3):
             return self.pos_Pc
         return self.objetivo
+    
     def ejecutar(self, pos_Pc, dir_pc, dt):
         self.pos_Pc = pos_Pc
         self.dir_pc = dir_pc
         self.historial.append(self.pos_Pc)
-
         if len(self.historial) > self.retraso:
-
             self.objetivo = self.historial.pop(0)
-
         if self.estado == 'chase':
-
             self.tiempo_sin_progreso = pg.time.get_ticks()
-
         if self.en_casa:
             self.mover_en_casa(dt)
             return
         self.alternar_estado()
         self.estados()
         self.mover(dt)
+        
     def reiniciar(self, x, y):
         super().reiniciar(x, y)
         self.historial.clear()

@@ -236,7 +236,10 @@ while jugando:
                         spawn = Spawns[i]
                     else:
                         spawn = Spawns[0]
+
                     fantasma.reiniciar(spawn[0], spawn[1])
+
+                estado_juego = iniciar_ready(False)
 
         else:
             en_freeze = tiempo_freeze > 0 and pg.time.get_ticks() - tiempo_freeze < 1000
