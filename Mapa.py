@@ -88,7 +88,6 @@ def Dibujar_Mapa(pantalla, mapa : list, tamaño_casillero = 18) -> None:
                 Puerta.add(Nueva_puerta)
             elif Caracter == "G":
                 Spawns.append((x,y))
-
                 
     return grupo_Paredes, grupo_puntos, Pos_Pm , Puerta, Spawns
 
