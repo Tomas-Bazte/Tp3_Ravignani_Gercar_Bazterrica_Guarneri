@@ -16,6 +16,8 @@ class Fantasma(Criatura):
     velocidad_normal = (7.5 * 0.75)
     velocidad_asustado = (7.5 * 0.50)
     velocidad_ojos = (7.5 * 1.5)
+    _canal_ojos_compartido = None 
+    _conteo_muertos = 0
 
     def __init__(self, x : int, y : int, nombre : str, color : tuple, esquina_scatter: tuple, pos_Pc : tuple, x_casa : int, y_casa : int, grupo_Paredes):
         super().__init__(x, y, Fantasma.velocidad_normal)
@@ -54,7 +56,7 @@ class Fantasma(Criatura):
         self.sonido_muerte = pg.mixer.Sound("sonidos_pacman/eat_ghost.wav")
         self.sonido_ojos = pg.mixer.Sound("sonidos_pacman/eyes_firstloop.wav")
         self.sonido_ojos_loop = pg.mixer.Sound("sonidos_pacman/eyes.wav")
-        self.canal_ojos = None
+        self.canal_ojos = None                
         self.volviendo_etapa = "puerta"
         self.sonido_muerte = pg.mixer.Sound("sonidos_pacman/eat_ghost.wav")
         self.sprites_compartidos = {
@@ -273,7 +275,9 @@ class Fantasma(Criatura):
             self.tiempo_sin_progreso = pg.time.get_ticks()
             self.forzar_random_hasta = 0
             self.volviendo_etapa = "puerta"
-            self.canal_ojos = self.sonido_ojos.play(loops=-1)
+            Fantasma._conteo_muertos += 1
+            if Fantasma._canal_ojos_compartido is None or not Fantasma._canal_ojos_compartido.get_busy():
+                Fantasma._canal_ojos_compartido = self.sonido_ojos.play(loops=-1)
 
     def alternar_estado(self)->None:
         """Gestiona las transiciones de estado del fantasma según la situación.
