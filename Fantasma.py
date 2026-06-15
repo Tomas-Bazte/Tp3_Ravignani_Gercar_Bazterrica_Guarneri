@@ -306,9 +306,9 @@ class Fantasma(Criatura):
                     self.yr = float(self.casa[1])
                     self.rect.topleft = self.casa
                     self.estado = 'saliendo'
-                    if self.canal_ojos:
-                        self.canal_ojos.stop()
-                        self.canal_ojos = None
+                    if Fantasma._canal_ojos_compartido:
+                        Fantasma._canal_ojos_compartido.stop()
+                        Fantasma._canal_ojos_compartido = None
                     self.volviendo_etapa = "puerta"
                     self.ultimo_tile = (-1, -1)
                     self.mejor_dist_objetivo = float('inf')
@@ -350,7 +350,7 @@ class Fantasma(Criatura):
             self.dir_bounce = -1
             self.direccion = 'arriba'
 
-    def mover(self, dt: float)->None:
+    def mover(self, dt: float)->None: # dt es el tiempo que pasa entre el frame actual y el anterior
         if self.estado == 'saliendo':
             velocidad = self.velocidad_normal * TILE_SIZE * dt
             if abs(self.rect.x - self.puerta_x) > 2:
@@ -407,9 +407,9 @@ class Fantasma(Criatura):
             y: posicion del fantasma
         Retorna:
             None"""
-        if self.canal_ojos:
-            self.canal_ojos.stop()
-            self.canal_ojos = None
+        if Fantasma._canal_ojos_compartido:
+            Fantasma._canal_ojos_compartido.stop()
+            Fantasma._canal_ojos_compartido = None
         self.xr = float(x)
         self.yr = float(y)
         self.rect.topleft = (x, y)

@@ -26,7 +26,7 @@ pg.init()
 pg.mixer.init()
 pg.font.init()
 pantalla = pg.display.set_mode((ANCHO, ALTO))
-pg.display.set_caption("Test Pac-Man")
+pg.display.set_caption("Pac-Man")
 HUD.cargar_frutas_hud()
 mapa_surface = pg.Surface((MAPA_ANCHO, MAPA_ALTO))
 reloj = pg.time.Clock()
@@ -164,6 +164,7 @@ def incorporar_fantasmas(id_elegido : list, esquinas_elegidas : dict, spawns : l
         lista_fantasmas.append(f)
     return lista_fantasmas
 fantasmas_juego = incorporar_fantasmas(Fantasmas, Esquinas, Spawns, grupo_paredes)
+
 for fantasma in fantasmas_juego:
     fantasma.grupo_Puertas = Puertas
 estado_juego = iniciar_ready(con_sonido=True)
@@ -173,28 +174,8 @@ while jugando:
         if evento.type == pg.QUIT:
             jugando = False
         if evento.type == pg.KEYDOWN:
-            if evento.key == pg.K_i:
-                nivel_intermission_actual = 3
-                iniciar_intermission_por_nivel(nivel_intermission_actual)
-                estado_juego = "intermission"
-
-            elif evento.key == pg.K_o:
-                nivel_intermission_actual = 6
-                iniciar_intermission_por_nivel(nivel_intermission_actual)
-                estado_juego = "intermission"
-            elif evento.key == pg.K_p:
-                nivel_intermission_actual = 10
-                iniciar_intermission_por_nivel(nivel_intermission_actual)
-                estado_juego = "intermission"
-
-            elif estado_juego == "jugando":
-
-                if evento.key == pg.K_m and pacman.estado != "muriendo":
-                    pacman.iniciar_muerte()
-                elif evento.key == pg.K_f:
-                    fruta = Frutas(POS_FRUTA[0], POS_FRUTA[1], nivel, TILE_SIZE)
-                    grupo_frutas.add(fruta)
-                elif pacman.estado != "muriendo":
+            if estado_juego == "jugando":
+                if pacman.estado != "muriendo":
                     pacman.cambiar_direccion(evento.key)
     if estado_juego == "ready":
 
