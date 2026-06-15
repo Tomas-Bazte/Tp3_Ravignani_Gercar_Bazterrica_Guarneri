@@ -189,6 +189,7 @@ while jugando:
     elif estado_juego == "jugando":
 
         if len(grupo_puntos) == 0:
+            pg.mixer.stop()
             estado_juego = "pausa_nivel"
             tiempo_inicio_estado = pg.time.get_ticks()
 
@@ -198,7 +199,6 @@ while jugando:
             pacman.frame_animacion = 0
 
         elif pacman.estado == "muriendo":
-
             if pacman.actualizar_muerte():
                 pacman.reiniciar_posicion(Pos_Pm[0] + TILE_SIZE // 2 ,Pos_Pm[1] + TILE_SIZE // 2)
                 contador_puntos_comidos = 0
