@@ -52,8 +52,11 @@ class Fantasma(Criatura):
         self.bounce_limite_sup = y_casa - TILE_SIZE
         self.bounce_limite_inf = y_casa + TILE_SIZE
         self.sonido_muerte = pg.mixer.Sound("sonidos_pacman/eat_ghost.wav")
+        self.sonido_ojos = pg.mixer.Sound("sonidos_pacman/eyes_firstloop.wav")
+        self.sonido_ojos_loop = pg.mixer.Sound("sonidos_pacman/eyes.wav")
+        self.canal_ojos = None
         self.volviendo_etapa = "puerta"
-
+        self.sonido_muerte = pg.mixer.Sound("sonidos_pacman/eat_ghost.wav")
         self.sprites_compartidos = {
             'asustado': [
                 pg.transform.smoothscale(pg.image.load('fantasmas/Asustado/Arcade - Pac-Man - General Sprites - Blue Ghost (1)_frame_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
@@ -270,6 +273,7 @@ class Fantasma(Criatura):
             self.tiempo_sin_progreso = pg.time.get_ticks()
             self.forzar_random_hasta = 0
             self.volviendo_etapa = "puerta"
+            self.canal_ojos = self.sonido_ojos.play(loops=-1)
 
     def alternar_estado(self)->None:
         """Gestiona las transiciones de estado del fantasma según la situación.
@@ -288,19 +292,19 @@ class Fantasma(Criatura):
                 self.forzar_random_hasta = 0
                 self.estado = 'scatter' if self.estado_actual % 2 == 0 else 'chase'
             return
-
         if self.estado == 'muerto':
             if self.volviendo_etapa == "casa":
                 casa_tile = (self.casa[0] // TILE_SIZE, self.casa[1] // TILE_SIZE)
                 pos_actual = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
                 cerca_casa = (abs(self.rect.x - self.casa[0]) <= TILE_SIZE and abs(self.rect.y - self.casa[1]) <= TILE_SIZE)
-
                 if pos_actual == casa_tile or cerca_casa:
                     self.xr = float(self.casa[0])
                     self.yr = float(self.casa[1])
                     self.rect.topleft = self.casa
-
                     self.estado = 'saliendo'
+                    if self.canal_ojos:
+                        self.canal_ojos.stop()
+                        self.canal_ojos = None
                     self.volviendo_etapa = "puerta"
                     self.ultimo_tile = (-1, -1)
                     self.mejor_dist_objetivo = float('inf')
@@ -399,6 +403,9 @@ class Fantasma(Criatura):
             y: posicion del fantasma
         Retorna:
             None"""
+        if self.canal_ojos:
+            self.canal_ojos.stop()
+            self.canal_ojos = None
         self.xr = float(x)
         self.yr = float(y)
         self.rect.topleft = (x, y)
