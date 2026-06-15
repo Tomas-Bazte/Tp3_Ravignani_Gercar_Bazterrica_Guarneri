@@ -97,46 +97,39 @@ class Fantasma(Criatura):
                 if (objy == 10 or objy == 22) and (11 <= objx <= 16): # Zona prohibida
                     direcciones_libres[direccion] = False # Si intentan subir aca quedan "bloqueados"
                     continue
-
             rect_prueba = pg.Rect(objx * TILE_SIZE, objy * TILE_SIZE, TILE_SIZE, TILE_SIZE) # Rect de prueba
-
             col_pared = bool(rect_prueba.collideobjects(self.grupo_Paredes.sprites())) # Ver si chocaria con una pared
             col_puerta = False
             if not en_casa_o_saliendo and hasattr(self, 'grupo_Puertas'):
                 col_puerta = bool(rect_prueba.collideobjects(self.grupo_Puertas.sprites()))
-
             direcciones_libres[direccion] = not col_pared and not col_puerta
         return direcciones_libres
     
-    def direccion_bfs(self, objetivo):
+    def direccion_ojos(self, objetivo):
+        """Busca el camino más corto al objetivo y
+        devuelve la primera dirección a tomar. Si no hay camino,
+        mantiene la dirección actual.
+        """
         inicio = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
         destino = (objetivo[0] // TILE_SIZE, objetivo[1] // TILE_SIZE)
-
         cola = [(inicio, [])]
         visitados = {inicio}
-
         while cola:
             actual, camino = cola.pop(0)
-
             if actual == destino:
                 if camino:
                     return camino[0]
                 return self.direccion
-
             tile_x, tile_y = actual
             direcciones_libres = self.analizar_colisiones(tile_x, tile_y)
-
             for direccion, libre in direcciones_libres.items():
                 if not libre:
                     continue
-
                 dx, dy = direcciones_default[direccion]
                 vecino = (tile_x + dx, tile_y + dy)
-
                 if vecino not in visitados:
                     visitados.add(vecino)
                     cola.append((vecino, camino + [direccion]))
-
         return self.direccion
 
     def direcciones(self, objetivo: tuple, puede_volver = False):
@@ -147,12 +140,9 @@ class Fantasma(Criatura):
             mejores[0]: la mejor direcion de movimiento"""
         tile_x = self.rect.x // TILE_SIZE
         tile_y = self.rect.y // TILE_SIZE
-
         direcciones_libres = self.analizar_colisiones(tile_x, tile_y)
         posibles_posiciones = {}
-
         for direccion, disponible in direcciones_libres.items():
-            # Si puede_volver=True (estado muerto), permite dar vuelta
             if not disponible or (not puede_volver and direccion == opuesto[self.direccion]):
                 continue
             dx, dy = direcciones_default[direccion]
@@ -161,33 +151,25 @@ class Fantasma(Criatura):
             dist_x = (objetivo[0] // TILE_SIZE) - proximo_tile_x
             dist_y = (objetivo[1] // TILE_SIZE) - proximo_tile_y
             posibles_posiciones[direccion] = dist_x ** 2 + dist_y ** 2
-
         if not posibles_posiciones:
             return opuesto[self.direccion]
-
-        # Solo actualizar progreso y modo random si NO está muerto
         if not puede_volver:
             dist_actual = (((objetivo[0] // TILE_SIZE) - tile_x) ** 2 +
                         ((objetivo[1] // TILE_SIZE) - tile_y) ** 2)
-
             if dist_actual < self.mejor_dist_objetivo:
                 self.mejor_dist_objetivo = dist_actual
                 self.tiempo_sin_progreso = pg.time.get_ticks()
-
             ahora = pg.time.get_ticks()
             en_modo_random = ahora < self.forzar_random_hasta
-
             if not en_modo_random and ahora - self.tiempo_sin_progreso > 3000:
                 self.tiempo_sin_progreso = ahora
                 self.mejor_dist_objetivo = float('inf')
                 self.forzar_random_hasta = ahora + 2000
                 en_modo_random = True
-
             if en_modo_random:
                 dirs_libres = [d for d, libre in direcciones_libres.items() if libre and d != opuesto[self.direccion]]
                 if dirs_libres:
                     return random.choice(dirs_libres)
-
         prioridad = ['arriba', 'izquierda', 'abajo', 'derecha']
         min_dist = min(posibles_posiciones.values())
         mejores = [d for d, dist in posibles_posiciones.items() if dist == min_dist]
@@ -197,40 +179,27 @@ class Fantasma(Criatura):
         return mejores[0]
 
     def estados(self)->None:
+        """Configura la velocidad y el objetivo según el estado actual,
+        y actualiza la dirección al cambiar de tile.
+        """
         pos_actual = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
-
         if self.estado == 'scatter':
             self.velocidad = self.velocidad_normal
             objetivo = self.esquina_scatter
-
         elif self.estado == 'chase':
             self.velocidad = self.velocidad_normal
             objetivo = self.definir_objetivo()
-
         elif self.estado == 'muerto':
             self.velocidad = self.velocidad_ojos
-
             if len(self.grupo_Puertas.sprites()) > 0:
                 puerta = self.grupo_Puertas.sprites()[0]
-                puerta_tile = (
-                    puerta.rect.x // TILE_SIZE,
-                    puerta.rect.y // TILE_SIZE
-                )
+                puerta_tile = (puerta.rect.x // TILE_SIZE, puerta.rect.y // TILE_SIZE)
             else:
                 puerta = None
-                puerta_tile = (
-                    self.puerta_x // TILE_SIZE,
-                    self.puerta_y // TILE_SIZE
-                )
-
+                puerta_tile = (self.puerta_x // TILE_SIZE, self.puerta_y // TILE_SIZE)
             if self.volviendo_etapa == "puerta":
                 objetivo = (puerta_tile[0] * TILE_SIZE, puerta_tile[1] * TILE_SIZE)
-
-                cerca_puerta = (
-                    abs(self.rect.x - objetivo[0]) <= TILE_SIZE and
-                    abs(self.rect.y - objetivo[1]) <= TILE_SIZE
-                )
-
+                cerca_puerta = (abs(self.rect.x - objetivo[0]) <= TILE_SIZE and abs(self.rect.y - objetivo[1]) <= TILE_SIZE)
                 if pos_actual == puerta_tile or cerca_puerta:
                     self.xr = float(objetivo[0])
                     self.yr = float(objetivo[1])
@@ -241,30 +210,23 @@ class Fantasma(Criatura):
 
             elif self.volviendo_etapa == "casa":
                 objetivo = self.casa
-
         elif self.estado == 'asustado':
             self.velocidad = self.velocidad_asustado
             if self.alineado() and pos_actual != self.ultimo_tile:
                 self.ultimo_tile = pos_actual
                 self.asustado()
             return
-
         elif self.estado == 'saliendo':
             return
-
         if self.en_casa:
             return
-
         if self.alineado() and pos_actual != self.ultimo_tile:
             self.ultimo_tile = pos_actual
-
             if self.estado == 'muerto':
-                self.direccion = self.direccion_bfs(objetivo)
+                self.direccion = self.direccion_ojos(objetivo)
             else:
                 self.direccion = self.direcciones(objetivo)
-
             self.recien_salio = False
-            
 
     def activar_asustado(self)->None:
         """pone al fantasma en modo asustado
@@ -289,12 +251,10 @@ class Fantasma(Criatura):
         pos_y = self.rect.y // TILE_SIZE
         posibles_direcciones = self.analizar_colisiones(pos_x, pos_y)
 
-        direcciones_validas = [
-            d for d, libre in posibles_direcciones.items()
-            if libre and d != opuesto[self.direccion]
-        ]
-        if not direcciones_validas:
-            direcciones_validas = [d for d, libre in posibles_direcciones.items() if libre]
+        direcciones_validas = []
+        for direccion, libre in posibles_direcciones.items():
+            if libre and direccion != opuesto[self.direccion]:
+                direcciones_validas.append(direccion)
         if direcciones_validas:
             self.direccion = random.choice(direcciones_validas)
 
@@ -312,9 +272,13 @@ class Fantasma(Criatura):
             self.volviendo_etapa = "puerta"
 
     def alternar_estado(self)->None:
+        """Gestiona las transiciones de estado del fantasma según la situación.
+        Ignora el cambio si está saliendo de casa o asustado/muerto hasta
+        cumplir sus condiciones. En juego normal, alterna entre scatter y
+        chase según los tiempos definidos en Estado.
+        """
         if self.estado == 'saliendo' or self.en_casa:
             return
-
         if self.estado == 'asustado':
             if pg.time.get_ticks() - self.tiempo_asustado >= 6000:
                 self.frame_actual = 0
@@ -327,20 +291,9 @@ class Fantasma(Criatura):
 
         if self.estado == 'muerto':
             if self.volviendo_etapa == "casa":
-                casa_tile = (
-                    self.casa[0] // TILE_SIZE,
-                    self.casa[1] // TILE_SIZE
-                )
-
-                pos_actual = (
-                    self.rect.x // TILE_SIZE,
-                    self.rect.y // TILE_SIZE
-                )
-
-                cerca_casa = (
-                    abs(self.rect.x - self.casa[0]) <= TILE_SIZE and
-                    abs(self.rect.y - self.casa[1]) <= TILE_SIZE
-                )
+                casa_tile = (self.casa[0] // TILE_SIZE, self.casa[1] // TILE_SIZE)
+                pos_actual = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
+                cerca_casa = (abs(self.rect.x - self.casa[0]) <= TILE_SIZE and abs(self.rect.y - self.casa[1]) <= TILE_SIZE)
 
                 if pos_actual == casa_tile or cerca_casa:
                     self.xr = float(self.casa[0])
@@ -392,22 +345,18 @@ class Fantasma(Criatura):
     def mover(self, dt: float)->None:
         if self.estado == 'saliendo':
             velocidad = self.velocidad_normal * TILE_SIZE * dt
-
             if abs(self.rect.x - self.puerta_x) > 2:
                 if self.rect.x < self.puerta_x:
                     self.xr += velocidad
                 else:
                     self.xr -= velocidad
                 self.rect.x = int(self.xr)
-
             else:
                 self.xr = float(self.puerta_x)
                 self.rect.x = self.puerta_x
                 self.yr -= velocidad
                 self.rect.y = int(self.yr)
-
                 destino_y = self.puerta_y - TILE_SIZE
-
                 if self.rect.y <= destino_y:
                     self.rect.y = destino_y
                     self.yr = float(destino_y)
@@ -419,25 +368,18 @@ class Fantasma(Criatura):
                     self.recien_salio = True
                     self.tiempo_estado = pg.time.get_ticks()
             return
-
         dx, dy = direcciones_default[self.direccion]
-
         self.xr += dx * self.velocidad * TILE_SIZE * dt
         self.yr += dy * self.velocidad * TILE_SIZE * dt
-
         ancho_mapa = MAPA_ANCHO
-
         if self.xr < -TILE_SIZE:
             self.xr += ancho_mapa + TILE_SIZE
         elif self.xr > ancho_mapa:
             self.xr -= ancho_mapa + TILE_SIZE
-
         self.rect.x = int(self.xr)
         self.rect.y = int(self.yr)
-
         if self.estado not in ['saliendo']:
             col_pared = bool(self.rect.collideobjects(self.grupo_Paredes.sprites()))
-
             if col_pared:
                 if dx > 0:
                     self.xr = float((self.rect.x // TILE_SIZE) * TILE_SIZE)
@@ -447,7 +389,6 @@ class Fantasma(Criatura):
                     self.yr = float((self.rect.y // TILE_SIZE) * TILE_SIZE)
                 elif dy < 0:
                     self.yr = float(((self.rect.y // TILE_SIZE) + 1) * TILE_SIZE)
-
                 self.rect.x = int(self.xr)
                 self.rect.y = int(self.yr)
 
@@ -751,6 +692,7 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         self.sprites = self._cargar_sprites()
 
     def _cargar_sprites(self):
+        """Carga y escala los sprites de Tracer para cada dirección."""
         return {
             'derecha': [
                 pg.transform.smoothscale(pg.image.load('fantasmas/Tracer/Tracer_derecha_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
@@ -771,6 +713,7 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         }
 
     def definir_objetivo(self):
+        """Devuelve la posición retrasada de Pacman, o su posición actual si está muy cerca."""
         dist_x = abs(self.objetivo[0] - self.rect.x)
         dist_y = abs(self.objetivo[1] - self.rect.y)
         if (dist_x + dist_y) < (TILE_SIZE * 3):
@@ -778,6 +721,7 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         return self.objetivo
     
     def ejecutar(self, pos_Pc, dir_pc, dt):
+        """Actualiza el historial y mueve a Tracer siguiendo a Pacman con retraso de frames."""
         self.pos_Pc = pos_Pc
         self.dir_pc = dir_pc
         self.historial.append(self.pos_Pc)
@@ -793,6 +737,7 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         self.mover(dt)
         
     def reiniciar(self, x, y):
+        """Reinicia Tracer a su posición inicial y limpia el historial."""
         super().reiniciar(x, y)
         self.historial.clear()
         self.objetivo = self.pos_Pc
@@ -809,6 +754,7 @@ class Patrullero(Fantasma, pg.sprite.Sprite):
         self.sprites = self._cargar_sprites()
 
     def _cargar_sprites(self):
+        """Carga y escala los sprites de Patrullero para cada dirección."""
         return {
             'derecha': [
                 pg.transform.smoothscale(pg.image.load('fantasmas/Patrullero/Patrullero_derecha_1.png').convert_alpha(), (TILE_SIZE, TILE_SIZE)),
@@ -829,6 +775,7 @@ class Patrullero(Fantasma, pg.sprite.Sprite):
         }
 
     def definir_objetivo(self):
+        """Devuelve el siguiente punto de la ruta, avanzando al llegar al actual."""
         objetivo = self.ruta[self.punto_actual] # Obtener el objetivo
         dist_x = (objetivo[0] - self.rect.x) // TILE_SIZE
         dist_y = (objetivo[1] - self.rect.y) // TILE_SIZE # Calcular la distancia
@@ -840,6 +787,7 @@ class Patrullero(Fantasma, pg.sprite.Sprite):
         return objetivo
 
     def ejecutar(self, pos_Pc, dt):
+        """Actualiza el estado y mueve a Patrullero según su lógica de patrulla."""
         if self.en_casa:
             self.mover_en_casa(dt)
             return
