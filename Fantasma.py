@@ -52,6 +52,7 @@ class Fantasma(Criatura):
         self.bounce_limite_sup = y_casa - TILE_SIZE
         self.bounce_limite_inf = y_casa + TILE_SIZE
         self.sonido_muerte = pg.mixer.Sound("sonidos_pacman/eat_ghost.wav")
+        self.volviendo_etapa = "puerta"
 
         self.sprites_compartidos = {
             'asustado': [
@@ -106,6 +107,37 @@ class Fantasma(Criatura):
 
             direcciones_libres[direccion] = not col_pared and not col_puerta
         return direcciones_libres
+    
+    def direccion_bfs(self, objetivo):
+        inicio = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
+        destino = (objetivo[0] // TILE_SIZE, objetivo[1] // TILE_SIZE)
+
+        cola = [(inicio, [])]
+        visitados = {inicio}
+
+        while cola:
+            actual, camino = cola.pop(0)
+
+            if actual == destino:
+                if camino:
+                    return camino[0]
+                return self.direccion
+
+            tile_x, tile_y = actual
+            direcciones_libres = self.analizar_colisiones(tile_x, tile_y)
+
+            for direccion, libre in direcciones_libres.items():
+                if not libre:
+                    continue
+
+                dx, dy = direcciones_default[direccion]
+                vecino = (tile_x + dx, tile_y + dy)
+
+                if vecino not in visitados:
+                    visitados.add(vecino)
+                    cola.append((vecino, camino + [direccion]))
+
+        return self.direccion
 
     def direcciones(self, objetivo: tuple, puede_volver = False):
         """elije la mejor direcion para movere dependiendo su objetivo
@@ -165,38 +197,72 @@ class Fantasma(Criatura):
         return mejores[0]
 
     def estados(self)->None:
-        """Maneja el comportamiendo de los fantasmas segun su estado
-        scatter: va hacia su esquina
-        chase: persuigue usando la logica de cada fantasma
-        muerto: vuelve a la ghost house
-        asustado: elije una direcion aleatoria
-        saliendo: no deside direcion ya que solo tiene una
-        Retorna:
-            None"""
         pos_actual = (self.rect.x // TILE_SIZE, self.rect.y // TILE_SIZE)
 
         if self.estado == 'scatter':
             self.velocidad = self.velocidad_normal
             objetivo = self.esquina_scatter
+
         elif self.estado == 'chase':
             self.velocidad = self.velocidad_normal
             objetivo = self.definir_objetivo()
+
         elif self.estado == 'muerto':
             self.velocidad = self.velocidad_ojos
-            objetivo = self.casa
+
+            if len(self.grupo_Puertas.sprites()) > 0:
+                puerta = self.grupo_Puertas.sprites()[0]
+                puerta_tile = (
+                    puerta.rect.x // TILE_SIZE,
+                    puerta.rect.y // TILE_SIZE
+                )
+            else:
+                puerta = None
+                puerta_tile = (
+                    self.puerta_x // TILE_SIZE,
+                    self.puerta_y // TILE_SIZE
+                )
+
+            if self.volviendo_etapa == "puerta":
+                objetivo = (puerta_tile[0] * TILE_SIZE, puerta_tile[1] * TILE_SIZE)
+
+                cerca_puerta = (
+                    abs(self.rect.x - objetivo[0]) <= TILE_SIZE and
+                    abs(self.rect.y - objetivo[1]) <= TILE_SIZE
+                )
+
+                if pos_actual == puerta_tile or cerca_puerta:
+                    self.xr = float(objetivo[0])
+                    self.yr = float(objetivo[1])
+                    self.rect.topleft = objetivo
+                    self.volviendo_etapa = "casa"
+                    self.direccion = "abajo"
+                    self.ultimo_tile = (-1, -1)
+
+            elif self.volviendo_etapa == "casa":
+                objetivo = self.casa
+
         elif self.estado == 'asustado':
             self.velocidad = self.velocidad_asustado
             if self.alineado() and pos_actual != self.ultimo_tile:
                 self.ultimo_tile = pos_actual
                 self.asustado()
             return
+
         elif self.estado == 'saliendo':
             return
+
         if self.en_casa:
             return
+
         if self.alineado() and pos_actual != self.ultimo_tile:
             self.ultimo_tile = pos_actual
-            self.direccion = self.direcciones(objetivo, puede_volver=(self.estado == 'muerto'))
+
+            if self.estado == 'muerto':
+                self.direccion = self.direccion_bfs(objetivo)
+            else:
+                self.direccion = self.direcciones(objetivo)
+
             self.recien_salio = False
             
 
@@ -240,14 +306,15 @@ class Fantasma(Criatura):
             self.estado = 'muerto'
             self.velocidad = self.velocidad_ojos
             self.ultimo_tile = (-1, -1)
+            self.mejor_dist_objetivo = float('inf')
+            self.tiempo_sin_progreso = pg.time.get_ticks()
+            self.forzar_random_hasta = 0
+            self.volviendo_etapa = "puerta"
 
     def alternar_estado(self)->None:
-        """Cambia el estado de el fantasma segun el tiempo y la situacion 
-        controlando entre modo sactter y chase, cuando termina el modo asustado y que pasa con los fantasmas muertos cuando lluegan a la cas
-        Retorna:
-            None"""
         if self.estado == 'saliendo' or self.en_casa:
             return
+
         if self.estado == 'asustado':
             if pg.time.get_ticks() - self.tiempo_asustado >= 6000:
                 self.frame_actual = 0
@@ -257,22 +324,36 @@ class Fantasma(Criatura):
                 self.forzar_random_hasta = 0
                 self.estado = 'scatter' if self.estado_actual % 2 == 0 else 'chase'
             return
+
         if self.estado == 'muerto':
-            pos_actual_x = self.rect.x // TILE_SIZE
-            pos_actual_y = self.rect.y // TILE_SIZE
-            casa_tile_x = self.casa[0] // TILE_SIZE
-            casa_tile_y = self.casa[1] // TILE_SIZE
-            if pos_actual_x == casa_tile_x and abs(pos_actual_y - casa_tile_y) <= 1:
-                self.xr = float(self.casa[0])
-                self.yr = float(self.casa[1])
-                self.rect.x = self.casa[0]
-                self.rect.y = self.casa[1]
-                self.estado = 'saliendo'
-                self.ultimo_tile = (-1, -1)
-                self.mejor_dist_objetivo = float('inf')
-                self.tiempo_sin_progreso = pg.time.get_ticks()
-                self.forzar_random_hasta = 0
-                self.tiempo_estado = pg.time.get_ticks()
+            if self.volviendo_etapa == "casa":
+                casa_tile = (
+                    self.casa[0] // TILE_SIZE,
+                    self.casa[1] // TILE_SIZE
+                )
+
+                pos_actual = (
+                    self.rect.x // TILE_SIZE,
+                    self.rect.y // TILE_SIZE
+                )
+
+                cerca_casa = (
+                    abs(self.rect.x - self.casa[0]) <= TILE_SIZE and
+                    abs(self.rect.y - self.casa[1]) <= TILE_SIZE
+                )
+
+                if pos_actual == casa_tile or cerca_casa:
+                    self.xr = float(self.casa[0])
+                    self.yr = float(self.casa[1])
+                    self.rect.topleft = self.casa
+
+                    self.estado = 'saliendo'
+                    self.volviendo_etapa = "puerta"
+                    self.ultimo_tile = (-1, -1)
+                    self.mejor_dist_objetivo = float('inf')
+                    self.tiempo_sin_progreso = pg.time.get_ticks()
+                    self.forzar_random_hasta = 0
+                    self.tiempo_estado = pg.time.get_ticks()
             return
 
         if self.estado_actual < len(Estado):
@@ -309,25 +390,24 @@ class Fantasma(Criatura):
             self.direccion = 'arriba'
 
     def mover(self, dt: float)->None:
-        """Mueve a los fantasmas dependindo las situaciones, salindo de la casa, cuando esta afuera y por los tuneles del mapa
-        Argumentos:
-           dt: tiempo que paso desde el ultimo frame en segurndos
-        Retorna:
-            None"""
         if self.estado == 'saliendo':
             velocidad = self.velocidad_normal * TILE_SIZE * dt
+
             if abs(self.rect.x - self.puerta_x) > 2:
                 if self.rect.x < self.puerta_x:
                     self.xr += velocidad
                 else:
                     self.xr -= velocidad
                 self.rect.x = int(self.xr)
+
             else:
                 self.xr = float(self.puerta_x)
                 self.rect.x = self.puerta_x
                 self.yr -= velocidad
                 self.rect.y = int(self.yr)
+
                 destino_y = self.puerta_y - TILE_SIZE
+
                 if self.rect.y <= destino_y:
                     self.rect.y = destino_y
                     self.yr = float(destino_y)
@@ -340,12 +420,13 @@ class Fantasma(Criatura):
                     self.tiempo_estado = pg.time.get_ticks()
             return
 
-    
-
         dx, dy = direcciones_default[self.direccion]
+
         self.xr += dx * self.velocidad * TILE_SIZE * dt
         self.yr += dy * self.velocidad * TILE_SIZE * dt
+
         ancho_mapa = MAPA_ANCHO
+
         if self.xr < -TILE_SIZE:
             self.xr += ancho_mapa + TILE_SIZE
         elif self.xr > ancho_mapa:
@@ -353,8 +434,10 @@ class Fantasma(Criatura):
 
         self.rect.x = int(self.xr)
         self.rect.y = int(self.yr)
+
         if self.estado not in ['saliendo']:
             col_pared = bool(self.rect.collideobjects(self.grupo_Paredes.sprites()))
+
             if col_pared:
                 if dx > 0:
                     self.xr = float((self.rect.x // TILE_SIZE) * TILE_SIZE)
@@ -364,6 +447,7 @@ class Fantasma(Criatura):
                     self.yr = float((self.rect.y // TILE_SIZE) * TILE_SIZE)
                 elif dy < 0:
                     self.yr = float(((self.rect.y // TILE_SIZE) + 1) * TILE_SIZE)
+
                 self.rect.x = int(self.xr)
                 self.rect.y = int(self.yr)
 
@@ -388,6 +472,7 @@ class Fantasma(Criatura):
         self.recien_salio = False
         self.tiempo_estado = pg.time.get_ticks()
         self.dir_bounce = -1
+        self.volviendo_etapa = "puerta"
 
     def Dibujar(self, pantalla)->None:
         """dibuja al fantasma en pantalla
