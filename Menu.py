@@ -105,7 +105,6 @@ def menu_inicio(pantalla):
                 descrip = fuente_normal.render(fantasma["desc"],True,GRIS)
                 pantalla.blit(nombre, (x_centro - 50, y_actual - 20))
                 pantalla.blit(descrip, (x_centro - 50, y_actual +2))
-
         elif estado_actual == "asignacion":
             id_actual = seleccionados[Esquinas_actual]
             for f in FANTASMAS:
@@ -120,5 +119,4 @@ def menu_inicio(pantalla):
                     pantalla.blit(Texto,Texto.get_rect(topleft=(ANCHO//2-200,y_fija)))
                 info = fuente_chica.render("Presiona 1-4 para asignar esquinas respectivamente",False,BLANCO)
                 pantalla.blit(info,info.get_rect(center=(ANCHO//2,ALTO-30)))
-
         pg.display.flip()
