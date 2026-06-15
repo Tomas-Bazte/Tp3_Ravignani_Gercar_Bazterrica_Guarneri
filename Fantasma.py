@@ -107,54 +107,57 @@ class Fantasma(Criatura):
             direcciones_libres[direccion] = not col_pared and not col_puerta
         return direcciones_libres
 
-    def direcciones(self, objetivo: tuple)->str:
+    def direcciones(self, objetivo: tuple, puede_volver = False):
         """elije la mejor direcion para movere dependiendo su objetivo
         Argumentos:
             objetivo: tupla con posicion del objetivo
         Retorna:
             mejores[0]: la mejor direcion de movimiento"""
-        tile_x = self.rect.x // TILE_SIZE # Obtener el tile actual
+        tile_x = self.rect.x // TILE_SIZE
         tile_y = self.rect.y // TILE_SIZE
 
-        direcciones_libres = self.analizar_colisiones(tile_x, tile_y) # Ver qué caminos están disponibles
-        posibles_posiciones = {} # Calcular distancia al objetivo desde cada posible movimiento
+        direcciones_libres = self.analizar_colisiones(tile_x, tile_y)
+        posibles_posiciones = {}
 
-        for direccion, disponible in direcciones_libres.items(): # Recorrer las direcciones
-            if not disponible or direccion == opuesto[self.direccion]:
+        for direccion, disponible in direcciones_libres.items():
+            # Si puede_volver=True (estado muerto), permite dar vuelta
+            if not disponible or (not puede_volver and direccion == opuesto[self.direccion]):
                 continue
-            dx, dy = direcciones_default[direccion] # Simular el siguiente tile
+            dx, dy = direcciones_default[direccion]
             proximo_tile_x = tile_x + dx
             proximo_tile_y = tile_y + dy
             dist_x = (objetivo[0] // TILE_SIZE) - proximo_tile_x
             dist_y = (objetivo[1] // TILE_SIZE) - proximo_tile_y
-            posibles_posiciones[direccion] = dist_x ** 2 + dist_y ** 2 # Medir distancia al objetivo, distancia euclidiana
+            posibles_posiciones[direccion] = dist_x ** 2 + dist_y ** 2
 
-        if not posibles_posiciones: # Si no hay opciones, vuelve
+        if not posibles_posiciones:
             return opuesto[self.direccion]
 
-        dist_actual = (((objetivo[0] // TILE_SIZE) - tile_x) ** 2 +
-                       ((objetivo[1] // TILE_SIZE) - tile_y) ** 2) # Distancia actual al objetivo
+        # Solo actualizar progreso y modo random si NO está muerto
+        if not puede_volver:
+            dist_actual = (((objetivo[0] // TILE_SIZE) - tile_x) ** 2 +
+                        ((objetivo[1] // TILE_SIZE) - tile_y) ** 2)
 
-        if dist_actual < self.mejor_dist_objetivo: # Ver si esta progresando
-            self.mejor_dist_objetivo = dist_actual
-            self.tiempo_sin_progreso = pg.time.get_ticks()
+            if dist_actual < self.mejor_dist_objetivo:
+                self.mejor_dist_objetivo = dist_actual
+                self.tiempo_sin_progreso = pg.time.get_ticks()
 
-        ahora = pg.time.get_ticks()
-        en_modo_random = ahora < self.forzar_random_hasta
+            ahora = pg.time.get_ticks()
+            en_modo_random = ahora < self.forzar_random_hasta
 
-        if not en_modo_random and ahora - self.tiempo_sin_progreso > 3000: # Si durante 3 segundos no consiguio acercarse al objetivo:
-            self.tiempo_sin_progreso = ahora
-            self.mejor_dist_objetivo = float('inf')
-            self.forzar_random_hasta = ahora + 2000
-            en_modo_random = True
+            if not en_modo_random and ahora - self.tiempo_sin_progreso > 3000:
+                self.tiempo_sin_progreso = ahora
+                self.mejor_dist_objetivo = float('inf')
+                self.forzar_random_hasta = ahora + 2000
+                en_modo_random = True
 
-        if en_modo_random: # Scatter
-            dirs_libres = [d for d, libre in direcciones_libres.items() if libre and d != opuesto[self.direccion]]
-            if dirs_libres:
-                return random.choice(dirs_libres)
+            if en_modo_random:
+                dirs_libres = [d for d, libre in direcciones_libres.items() if libre and d != opuesto[self.direccion]]
+                if dirs_libres:
+                    return random.choice(dirs_libres)
 
         prioridad = ['arriba', 'izquierda', 'abajo', 'derecha']
-        min_dist = min(posibles_posiciones.values()) # Elegir la mejor direccion
+        min_dist = min(posibles_posiciones.values())
         mejores = [d for d, dist in posibles_posiciones.items() if dist == min_dist]
         for p in prioridad:
             if p in mejores:
@@ -189,12 +192,11 @@ class Fantasma(Criatura):
             return
         elif self.estado == 'saliendo':
             return
-
         if self.en_casa:
             return
         if self.alineado() and pos_actual != self.ultimo_tile:
             self.ultimo_tile = pos_actual
-            self.direccion = self.direcciones(objetivo)
+            self.direccion = self.direcciones(objetivo, puede_volver=(self.estado == 'muerto'))
             self.recien_salio = False
             
 
@@ -761,10 +763,3 @@ class Patrullero(Fantasma, pg.sprite.Sprite):
         self.alternar_estado()
         self.estados()
         self.mover(dt)
-
-        
-        
-
-
-
-
