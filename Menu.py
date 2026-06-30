@@ -32,9 +32,9 @@ def menu_inicio(pantalla):
     fuente_normal = pg.font.SysFont("Courier", 20, bold=True)
     fuente_chica = pg.font.SysFont("Courier", 16, bold=False)
     menu = True
-    seleccionados = []
-    Esquinas = {}
-    Esquinas_actual = 0
+    seleccionados = []#Fantasmas seleccionados
+    Esquinas = {} #Esquinas seleccionadas
+    Esquinas_actual = 0 #Contador de esquinas seleccionadas
     estado_actual = "Inicio"
     esquinas = {1:"Superior Izquierda",2:"Superior Derecha",3:"Inferior Izquierda",4:"Inferior Derecha"}
     
@@ -50,12 +50,12 @@ def menu_inicio(pantalla):
                         estado_actual = "Seleccion"
                 elif estado_actual == "Seleccion":
                     if pg.K_1 <= evento.key <= pg.K_6:
-                            id_elegido = evento.key - pg.K_1 + 1
+                            id_elegido = evento.key - pg.K_1 + 1 #La tecla 1 es equivalente al numero 49 la 2 al 50 y sucesivamente
                             if id_elegido in seleccionados:
                                 seleccionados.remove(id_elegido)
                             elif len(seleccionados) < 4:
                                 seleccionados.append(id_elegido)
-                    elif evento.key == pg.K_RETURN:
+                    elif evento.key == pg.K_RETURN: #El return es el enter
                             if len(seleccionados) == 4:
                                 estado_actual = "asignacion"
                                 Esquinas_actual = 0
@@ -91,12 +91,12 @@ def menu_inicio(pantalla):
         elif estado_actual == "Seleccion":
             titulo = fuente_normal.render(f"Elija hasta 4 Fantasmas: {len(seleccionados)}/4",False,BLANCO)
             pantalla.blit (titulo,titulo.get_rect(center=(ANCHO//2,60)))
-            Y_primerF = 120
-            espaciado = 60
+            Y_primerF = 120 #Altura donde se escribe el primer fantasma (120 pixels)
+            espaciado = 60 
             for i,fantasma in enumerate(FANTASMAS):
                 y_actual = Y_primerF + (i * espaciado)
                 x_centro = ANCHO // 2
-                if fantasma["id"] in seleccionados:
+                if fantasma["id"] in seleccionados: #Si fue seleccionado se pinta el rectangulo
                     pg.draw.rect(pantalla, BLANCO, (x_centro - 150, y_actual - 25, 350, 50), 2)
                 num = fuente_normal.render(str(fantasma["id"]), True, BLANCO)
                 pantalla.blit(num, (x_centro - 130, y_actual - 10))
@@ -112,7 +112,7 @@ def menu_inicio(pantalla):
                     fantasma_actual = f
                     Texto = fuente_normal.render(f"Asignar esquina a {fantasma_actual['nombre']} {Esquinas_actual+1}/4",True,BLANCO)
                     pantalla.blit(Texto,Texto.get_rect(center=(ANCHO//2, 80)))
-                yor = 200
+                yor = 200 # Altura de la primera esquina escrita
                 for numero, esquina in esquinas.items():
                     Texto = fuente_normal.render(f"{numero} {esquina}",False,GRIS)
                     y_fija = yor + ((numero - 1) * 60)

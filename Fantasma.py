@@ -699,7 +699,7 @@ class Tracer (Fantasma,pg.sprite.Sprite):
         self.dir_pc = dir_pc
         self.historial = []
         self.objetivo = pos_Pc
-        self.retraso = 60 # Pacman desde hace 60 frames
+        self.retraso = 30 # Pacman desde hace 30 frames
         self.sprites = self._cargar_sprites()
 
     def _cargar_sprites(self):
